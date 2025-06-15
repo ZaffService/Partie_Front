@@ -1,0 +1,433 @@
+{
+  "users": [
+    {
+      "id": "1",
+      "name": "Zafe",
+      "phone": "777867740",
+      "avatar": "https://randomuser.me/api/portraits/men/32.jpg",
+      "status": "En ligne",
+      "isOnline": true,
+      "lastSeen": "2025-06-15T12:26:02.572Z",
+      "bio": "Salut ! J'utilise WhatsApp.",
+      "walletBalance": 0,
+      "totalEarnings": 0,
+      "contacts": [
+        "2",
+        "3",
+        "4",
+        "5"
+      ],
+      "groups": [
+        "group1",
+        "group2"
+      ]
+    },
+    {
+      "id": "2",
+      "name": "Abdallah",
+      "phone": "778123456",
+      "avatar": "https://randomuser.me/api/portraits/men/45.jpg",
+      "status": "Hors ligne",
+      "isOnline": false,
+      "lastSeen": "2024-06-15T09:45:00.000Z",
+      "bio": "Développeur passionné",
+      "walletBalance": 5000,
+      "totalEarnings": 5000,
+      "contacts": [
+        "1",
+        "3",
+        "4"
+      ],
+      "groups": [
+        "group1"
+      ]
+    },
+    {
+      "id": "3",
+      "name": "Ousmane Marra",
+      "phone": "776543210",
+      "avatar": "https://randomuser.me/api/portraits/men/67.jpg",
+      "status": "En ligne",
+      "isOnline": true,
+      "lastSeen": "2024-06-15T10:15:00.000Z",
+      "bio": "Entrepreneur tech",
+      "walletBalance": 0,
+      "totalEarnings": 0,
+      "contacts": [
+        "1",
+        "2",
+        "5"
+      ],
+      "groups": [
+        "group2"
+      ]
+    },
+    {
+      "id": "4",
+      "name": "Maman Dié ODC",
+      "phone": "775555555",
+      "avatar": "https://randomuser.me/api/portraits/women/23.jpg",
+      "status": "Hors ligne",
+      "isOnline": false,
+      "lastSeen": "2024-06-15T08:30:00.000Z",
+      "bio": "Formatrice ODC",
+      "walletBalance": 0,
+      "totalEarnings": 0,
+      "contacts": [
+        "1",
+        "2"
+      ],
+      "groups": [
+        "group1"
+      ]
+    },
+    {
+      "id": "5",
+      "name": "Zeynabe Ba",
+      "phone": "774444444",
+      "avatar": "https://randomuser.me/api/portraits/women/34.jpg",
+      "status": "En ligne",
+      "isOnline": true,
+      "lastSeen": "2024-06-15T10:00:00.000Z",
+      "bio": "Designer UI/UX",
+      "walletBalance": 0,
+      "totalEarnings": 0,
+      "contacts": [
+        "1",
+        "3"
+      ],
+      "groups": [
+        "group2"
+      ]
+    }
+  ],
+  "chats": [
+    {
+      "id": "1",
+      "name": "Zafe",
+      "phone": "777867740",
+      "avatar": "https://randomuser.me/api/portraits/men/32.jpg",
+      "status": "En ligne",
+      "isOnline": true,
+      "lastSeen": "2025-06-15T12:26:02.572Z",
+      "unread": 0,
+      "time": "14:22",
+      "lastMessage": "SALUT",
+      "lastMessageTime": "2025-06-15T14:22:40.067Z",
+      "messages": [
+        {
+          "id": 1749990369415,
+          "senderId": "1",
+          "receiverId": "3",
+          "text": "SALUT FRERE",
+          "sent": true,
+          "time": "12:26",
+          "timestamp": "2025-06-15T12:26:09.430Z",
+          "type": "text",
+          "status": "sent"
+        },
+        {
+          "id": 1749997237437,
+          "senderId": "2",
+          "receiverId": "1",
+          "text": "HELLO",
+          "sent": false,
+          "time": "14:20",
+          "timestamp": "2025-06-15T14:20:37.454Z",
+          "type": "text",
+          "status": "sent"
+        },
+        {
+          "id": 1749997360053,
+          "senderId": "2",
+          "receiverId": "1",
+          "text": "SALUT",
+          "sent": false,
+          "time": "14:22",
+          "timestamp": "2025-06-15T14:22:40.067Z",
+          "type": "text",
+          "status": "sent"
+        }
+      ]
+    },
+    {
+      "id": "2",
+      "name": "Abdallah",
+      "phone": "778123456",
+      "avatar": "https://randomuser.me/api/portraits/men/45.jpg",
+      "status": "Hors ligne",
+      "isOnline": "en ligne",
+      "lastSeen": "2025-06-15T14:29:03.716Z",
+      "unread": 2,
+      "time": "14:22",
+      "lastMessage": "SALUT",
+      "lastMessageTime": "2025-06-15T14:22:40.067Z",
+      "messages": [
+        {
+          "id": 1749997237437,
+          "senderId": "2",
+          "receiverId": "1",
+          "text": "HELLO",
+          "sent": true,
+          "time": "14:20",
+          "timestamp": "2025-06-15T14:20:37.454Z",
+          "type": "text",
+          "status": "sent"
+        },
+        {
+          "id": 1749997360053,
+          "senderId": "2",
+          "receiverId": "1",
+          "text": "SALUT",
+          "sent": true,
+          "time": "14:22",
+          "timestamp": "2025-06-15T14:22:40.067Z",
+          "type": "text",
+          "status": "sent"
+        }
+      ]
+    },
+    {
+      "id": "3",
+      "name": "Ousmane Marra",
+      "phone": "776543210",
+      "avatar": "https://randomuser.me/api/portraits/men/67.jpg",
+      "status": "En ligne",
+      "isOnline": true,
+      "lastSeen": "2024-06-15T10:15:00.000Z",
+      "unread": 0,
+      "time": "12:26",
+      "lastMessage": "SALUT FRERE",
+      "lastMessageTime": "2025-06-15T12:26:09.430Z",
+      "messages": [
+        {
+          "id": 1749990369415,
+          "senderId": "1",
+          "receiverId": "3",
+          "text": "SALUT FRERE",
+          "sent": false,
+          "time": "12:26",
+          "timestamp": "2025-06-15T12:26:09.430Z",
+          "type": "text",
+          "status": "sent"
+        }
+      ]
+    },
+    {
+      "id": "4",
+      "name": "Maman Dié ODC",
+      "phone": "775555555",
+      "avatar": "https://randomuser.me/api/portraits/women/23.jpg",
+      "status": "Hors ligne",
+      "isOnline": false,
+      "lastSeen": "2024-06-15T08:30:00.000Z",
+      "unread": 1,
+      "time": "08:30",
+      "lastMessage": "D'accord pour demain",
+      "lastMessageTime": "2024-06-15T08:30:00.000Z",
+      "messages": []
+    },
+    {
+      "id": "5",
+      "name": "Zeynabe Ba",
+      "phone": "774444444",
+      "avatar": "https://randomuser.me/api/portraits/women/34.jpg",
+      "status": "En ligne",
+      "isOnline": true,
+      "lastSeen": "2024-06-15T10:00:00.000Z",
+      "unread": 0,
+      "time": "10:00",
+      "lastMessage": "À bientôt!",
+      "lastMessageTime": "2024-06-15T10:00:00.000Z",
+      "messages": []
+    }
+  ],
+  "groups": [
+    {
+      "id": "group1",
+      "name": "Équipe ODC",
+      "description": "Groupe de l'équipe Orange Digital Center",
+      "avatar": "https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=150&h=150&fit=crop",
+      "members": [
+        "1",
+        "2",
+        "4"
+      ],
+      "admins": [
+        "1"
+      ],
+      "createdBy": "1",
+      "createdAt": "2024-06-15T08:00:00.000Z",
+      "lastMessage": "Réunion demain à 9h",
+      "lastMessageTime": "2024-06-15T16:30:00.000Z",
+      "messages": []
+    },
+    {
+      "id": "group2",
+      "name": "Développeurs Sénégal",
+      "description": "Communauté des développeurs du Sénégal",
+      "avatar": "https://images.unsplash.com/photo-1517077304055-6e89abbf09b0?w=150&h=150&fit=crop",
+      "members": [
+        "1",
+        "3",
+        "5"
+      ],
+      "admins": [
+        "3"
+      ],
+      "createdBy": "3",
+      "createdAt": "2024-06-14T10:00:00.000Z",
+      "lastMessage": "Nouveau projet en cours",
+      "lastMessageTime": "2024-06-15T14:20:00.000Z",
+      "messages": []
+    }
+  ],
+  "stories": [
+    {
+      "id": "story1",
+      "userId": "1",
+      "userName": "Zafe",
+      "userAvatar": "https://randomuser.me/api/portraits/men/32.jpg",
+      "type": "image",
+      "content": "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&h=600&fit=crop",
+      "caption": "Belle journée à Dakar ! 🌅",
+      "timestamp": "2025-06-15T08:00:00.000Z",
+      "expiresAt": "2025-06-16T08:00:00.000Z",
+      "views": [
+        "2",
+        "3"
+      ],
+      "likes": [
+        {
+          "userId": "2",
+          "timestamp": "2025-06-15T08:30:00.000Z"
+        },
+        {
+          "userId": "3",
+          "timestamp": "2025-06-15T09:00:00.000Z"
+        }
+      ],
+      "comments": [],
+      "isMonetized": false,
+      "earnings": 0
+    },
+    {
+      "id": "story2",
+      "userId": "3",
+      "userName": "Ousmane Marra",
+      "userAvatar": "https://randomuser.me/api/portraits/men/67.jpg",
+      "type": "text",
+      "content": "Nouveau projet lancé ! 🚀 #TechSenegal",
+      "backgroundColor": "#25D366",
+      "timestamp": "2025-06-15T10:30:00.000Z",
+      "expiresAt": "2025-06-16T10:30:00.000Z",
+      "views": [
+        "1",
+        "2",
+        "5"
+      ],
+      "likes": [
+        {
+          "userId": "1",
+          "timestamp": "2025-06-15T11:00:00.000Z"
+        }
+      ],
+      "comments": [],
+      "isMonetized": false,
+      "earnings": 0
+    },
+    {
+      "id": "story3",
+      "userId": "2",
+      "userName": "Abdallah",
+      "userAvatar": "https://randomuser.me/api/portraits/men/45.jpg",
+      "type": "image",
+      "content": "https://images.unsplash.com/photo-1517077304055-6e89abbf09b0?w=400&h=600&fit=crop",
+      "caption": "Coding session 💻",
+      "timestamp": "2025-06-15T14:00:00.000Z",
+      "expiresAt": "2025-06-16T14:00:00.000Z",
+      "views": [
+        "1",
+        "3",
+        "4",
+        "2"
+      ],
+      "likes": [
+        {
+          "userId": "1",
+          "timestamp": "2025-06-15T14:30:00.000Z"
+        },
+        {
+          "userId": "3",
+          "timestamp": "2025-06-15T15:00:00.000Z"
+        },
+        {
+          "userId": "4",
+          "timestamp": "2025-06-15T15:30:00.000Z"
+        }
+      ],
+      "comments": [],
+      "isMonetized": true,
+      "earnings": 5000
+    }
+  ],
+  "calls": [
+    {
+      "id": "call1",
+      "participants": [
+        "1",
+        "2"
+      ],
+      "type": "audio",
+      "status": "ended",
+      "startTime": "2025-06-15T11:00:00.000Z",
+      "endTime": "2025-06-15T11:05:30.000Z",
+      "duration": 330,
+      "initiator": "1"
+    },
+    {
+      "id": "call_1749996731597",
+      "participants": [
+        "2",
+        "1"
+      ],
+      "type": "audio",
+      "status": "ended",
+      "startTime": "2025-06-15T14:12:04.744Z",
+      "endTime": "2025-06-15T14:12:11.597Z",
+      "duration": 6,
+      "initiator": "2"
+    },
+    {
+      "id": "call_1749997260913",
+      "participants": [
+        "2",
+        "1"
+      ],
+      "type": "video",
+      "status": "ended",
+      "startTime": "2025-06-15T14:20:54.526Z",
+      "endTime": "2025-06-15T14:21:00.913Z",
+      "duration": 6,
+      "initiator": "2"
+    }
+  ],
+  "monetization": {
+    "settings": {
+      "likesThreshold": 3,
+      "timeWindow": 24,
+      "rewardAmount": 5000,
+      "currency": "FCFA"
+    },
+    "transactions": [
+      {
+        "id": "tx_1749990000000",
+        "userId": "2",
+        "storyId": "story3",
+        "amount": 5000,
+        "type": "story_reward",
+        "timestamp": "2025-06-15T15:30:00.000Z"
+      }
+    ]
+  }
+}

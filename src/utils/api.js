@@ -1,24 +1,24 @@
-const API_URL = 'http://localhost:5001'
+const API_URL = "https://mon-serveur-cub8.onrender.com"
 
 export async function getChats() {
   try {
     const response = await fetch(`${API_URL}/chats`)
-    if (!response.ok) throw new Error('Erreur réseau')
+    if (!response.ok) throw new Error("Erreur réseau")
     return await response.json()
   } catch (error) {
-    console.error('Erreur getChats:', error)
+    console.error("Erreur getChats:", error)
     throw error
-  } 
+  }
 }
 
 export async function getMessages(userId) {
   try {
     const response = await fetch(`${API_URL}/chats/${userId}`)
-    if (!response.ok) throw new Error('Erreur réseau')
+    if (!response.ok) throw new Error("Erreur réseau")
     const chat = await response.json()
     return chat.messages || []
   } catch (error) {
-    console.error('Erreur getMessages:', error)
+    console.error("Erreur getMessages:", error)
     return []
   }
 }
@@ -32,25 +32,24 @@ export async function addMessage(userId, message) {
       // Si le chat n'existe pas, le créer
       return await createChatForUser(userId, message)
     }
-    
+
     const chat = await response.json()
     chat.messages = chat.messages || []
     chat.messages.push(message)
-    
+
     // Mettre à jour le chat
     const updateResponse = await fetch(`${API_URL}/chats/${userId}`, {
-      method: 'PUT',
+      method: "PUT",
       headers: {
-        'Content-Type': 'application/json'
+        "Content-Type": "application/json",
       },
-      body: JSON.stringify(chat)
+      body: JSON.stringify(chat),
     })
-    
-    if (!updateResponse.ok) throw new Error('Erreur mise à jour')
+
+    if (!updateResponse.ok) throw new Error("Erreur mise à jour")
     return await updateResponse.json()
-    
   } catch (error) {
-    console.error('Erreur addMessage:', error)
+    console.error("Erreur addMessage:", error)
     throw error
   }
 }
@@ -62,23 +61,22 @@ export async function updateChat(userId, updates) {
       console.warn(`Chat ${userId} non trouvé pour mise à jour`)
       return null // Ne pas lancer d'erreur, juste ignorer
     }
-    
+
     const chat = await response.json()
     Object.assign(chat, updates)
-    
+
     const updateResponse = await fetch(`${API_URL}/chats/${userId}`, {
-      method: 'PUT',
+      method: "PUT",
       headers: {
-        'Content-Type': 'application/json'
+        "Content-Type": "application/json",
       },
-      body: JSON.stringify(chat)
+      body: JSON.stringify(chat),
     })
-    
-    if (!updateResponse.ok) throw new Error('Erreur mise à jour')
+
+    if (!updateResponse.ok) throw new Error("Erreur mise à jour")
     return await updateResponse.json()
-    
   } catch (error) {
-    console.error('Erreur updateChat:', error)
+    console.error("Erreur updateChat:", error)
     return null // Ne pas lancer d'erreur
   }
 }
@@ -94,22 +92,21 @@ async function createChatForUser(userId, message) {
       time: message.time,
       lastMessageTime: message.timestamp,
       unread: 0,
-      isOnline: false
+      isOnline: false,
     }
-    
+
     const response = await fetch(`${API_URL}/chats`, {
-      method: 'POST',
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json'
+        "Content-Type": "application/json",
       },
-      body: JSON.stringify(newChat)
+      body: JSON.stringify(newChat),
     })
-    
-    if (!response.ok) throw new Error('Erreur création chat')
+
+    if (!response.ok) throw new Error("Erreur création chat")
     return await response.json()
-    
   } catch (error) {
-    console.error('Erreur createChatForUser:', error)
+    console.error("Erreur createChatForUser:", error)
     throw error
   }
 }
@@ -117,23 +114,22 @@ async function createChatForUser(userId, message) {
 export async function createUser(userData) {
   try {
     const response = await fetch(`${API_URL}/chats`, {
-      method: 'POST',
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json'
+        "Content-Type": "application/json",
       },
       body: JSON.stringify({
         ...userData,
         messages: [],
         isOnline: true,
-        lastSeen: new Date().toISOString()
-      })
+        lastSeen: new Date().toISOString(),
+      }),
     })
-    
-    if (!response.ok) throw new Error('Erreur création utilisateur')
+
+    if (!response.ok) throw new Error("Erreur création utilisateur")
     return await response.json()
-    
   } catch (error) {
-    console.error('Erreur createUser:', error)
+    console.error("Erreur createUser:", error)
     throw error
   }
 }
@@ -142,27 +138,26 @@ export async function updateUserStatus(userId, isOnline) {
   try {
     const response = await fetch(`${API_URL}/chats/${userId}`)
     if (!response.ok) return
-    
+
     const chat = await response.json()
     chat.isOnline = isOnline
     chat.lastSeen = new Date().toISOString()
-    
+
     await fetch(`${API_URL}/chats/${userId}`, {
-      method: 'PUT',
+      method: "PUT",
       headers: {
-        'Content-Type': 'application/json'
+        "Content-Type": "application/json",
       },
-      body: JSON.stringify(chat)
+      body: JSON.stringify(chat),
     })
-    
   } catch (error) {
-    console.error('Erreur updateUserStatus:', error)
+    console.error("Erreur updateUserStatus:", error)
   }
 }
 
 export async function createNotification(notification) {
   try {
-    const response = await fetch(`${BASE_URL}/notifications`, {
+    const response = await fetch(`${API_URL}/notifications`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -183,7 +178,7 @@ export async function createNotification(notification) {
 
 export async function getNotifications(userId) {
   try {
-    const response = await fetch(`${BASE_URL}/notifications?userId=${userId}`)
+    const response = await fetch(`${API_URL}/notifications?userId=${userId}`)
     if (!response.ok) {
       throw new Error(`Erreur HTTP: ${response.status}`)
     }
@@ -197,14 +192,14 @@ export async function getNotifications(userId) {
 
 export async function updateMessageStatus(messageId, chatId, status) {
   try {
-    const chatResponse = await fetch(`${BASE_URL}/chats/${chatId}`)
+    const chatResponse = await fetch(`${API_URL}/chats/${chatId}`)
     const chat = await chatResponse.json()
 
     const messageIndex = chat.messages.findIndex((m) => m.id === messageId)
     if (messageIndex !== -1) {
       chat.messages[messageIndex].status = status
 
-      await fetch(`${BASE_URL}/chats/${chatId}`, {
+      await fetch(`${API_URL}/chats/${chatId}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -220,8 +215,8 @@ export async function updateMessageStatus(messageId, chatId, status) {
 export async function markMessagesAsRead(currentUserId, otherUserId) {
   try {
     const [currentUserChat, otherUserChat] = await Promise.all([
-      fetch(`${BASE_URL}/chats/${currentUserId}`).then((r) => r.json()),
-      fetch(`${BASE_URL}/chats/${otherUserId}`).then((r) => r.json()),
+      fetch(`${API_URL}/chats/${currentUserId}`).then((r) => r.json()),
+      fetch(`${API_URL}/chats/${otherUserId}`).then((r) => r.json()),
     ])
 
     if (currentUserChat.messages) {
@@ -236,12 +231,12 @@ export async function markMessagesAsRead(currentUserId, otherUserId) {
     }
 
     await Promise.all([
-      fetch(`${BASE_URL}/chats/${currentUserId}`, {
+      fetch(`${API_URL}/chats/${currentUserId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(currentUserChat),
       }),
-      fetch(`${BASE_URL}/chats/${otherUserId}`, {
+      fetch(`${API_URL}/chats/${otherUserId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(otherUserChat),

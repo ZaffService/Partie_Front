@@ -1,6 +1,6 @@
 import { showToast } from "./notifications.js"
 
-const API_URL = "http://localhost:5001"
+const API_URL = "https://mon-serveur-cub8.onrender.com"
 
 // Fonction pour générer un avatar aléatoire
 function generateRandomAvatar(name, gender = null) {

@@ -49,52 +49,52 @@ export async function login(name, phone) {
   try {
     // Validation personnalisée avec toasts
     if (!name && !phone) {
-      showToast("❌ Veuillez remplir tous les champs", "error")
+      showToast(" Veuillez remplir tous les champs", "error")
       return null
     }
 
     if (!name) {
-      showToast("❌ Le nom est obligatoire", "error")
+      showToast(" Le nom est obligatoire", "error")
       return null
     }
 
     if (!phone) {
-      showToast("❌ Le numéro de téléphone est obligatoire", "error")
+      showToast(" Le numéro de téléphone est obligatoire", "error")
       return null
     }
 
     // Validation du nom
     if (name.length < 2) {
-      showToast("❌ Le nom doit contenir au moins 2 caractères", "error")
+      showToast(" Le nom doit contenir au moins 2 caractères", "error")
       return null
     }
 
     if (name.length > 50) {
-      showToast("❌ Le nom ne peut pas dépasser 50 caractères", "error")
+      showToast(" Le nom ne peut pas dépasser 50 caractères", "error")
       return null
     }
 
     // Validation du téléphone
     if (!/^\d+$/.test(phone)) {
-      showToast("❌ Le numéro ne doit contenir que des chiffres", "error")
+      showToast(" Le numéro ne doit contenir que des chiffres", "error")
       return null
     }
 
     if (phone.length !== 9) {
-      showToast("❌ Le numéro doit contenir exactement 9 chiffres", "error")
+      showToast(" Le numéro doit contenir exactement 9 chiffres", "error")
       return null
     }
 
     if (!phone.startsWith("7")) {
-      showToast("❌ Le numéro doit commencer par 7 (format sénégalais)", "error")
+      showToast(" Le numéro doit commencer par 7 (format sénégalais)", "error")
       return null
     }
 
     // Récupération des utilisateurs depuis la table users
-    const response = await fetch("http://localhost:5001/users")
+    const response = await fetch("https://mon-serveur-cub8.onrender.com/users")
 
     if (!response.ok) {
-      showToast("❌ Erreur de connexion au serveur", "error")
+      showToast(" Erreur de connexion au serveur", "error")
       return null
     }
 
@@ -106,7 +106,7 @@ export async function login(name, phone) {
 
     if (user) {
       setCurrentUser(user)
-      showToast(`✅ Bienvenue ${user.name} !`, "success")
+      showToast(` Bienvenue ${user.name} !`, "success")
       return user
     } else {
       // Vérifier si le nom existe avec un autre numéro
@@ -114,17 +114,17 @@ export async function login(name, phone) {
       const phoneExists = users.find((u) => u.phone.trim() === phone.trim())
 
       if (nameExists && !phoneExists) {
-        showToast("❌ Ce nom existe mais avec un autre numéro de téléphone", "error")
+        showToast(" Ce nom existe mais avec un autre numéro de téléphone", "error")
       } else if (!nameExists && phoneExists) {
-        showToast("❌ Ce numéro existe mais avec un autre nom", "error")
+        showToast("Ce numéro existe mais avec un autre nom", "error")
       } else {
-        showToast("❌ Aucun compte trouvé avec ces informations", "error")
+        showToast("Aucun compte trouvé avec ces informations", "error")
       }
       return null
     }
   } catch (error) {
     console.error("Erreur de connexion:", error)
-    showToast("❌ Erreur de connexion au serveur. Vérifiez votre connexion internet.", "error")
+    showToast(" Erreur de connexion au serveur. Vérifiez votre connexion internet.", "error")
     return null
   }
 }
@@ -172,7 +172,7 @@ export function createLoginForm(onSuccess) {
       </form>
       
       <div class="mt-6 p-4 bg-[#2a3942] rounded-lg">
-        <p class="text-sm text-gray-400 mb-2">💡 Comptes de test disponibles :</p>
+        <p class="text-sm text-gray-400 mb-2"> Comptes de test disponibles :</p>
         <div class="space-y-1 text-xs text-gray-500">
           <div>• Zafe - 777867740</div>
           <div>• Abdallah - 778123456</div>
@@ -198,7 +198,7 @@ export function createLoginForm(onSuccess) {
     // Limiter à 9 chiffres
     if (value.length > 9) {
       value = value.substring(0, 9)
-      showToast("⚠️ Maximum 9 chiffres autorisés", "warning")
+      showToast(" Maximum 9 chiffres autorisés", "warning")
     }
 
     e.target.value = value
@@ -211,7 +211,7 @@ export function createLoginForm(onSuccess) {
     // Limiter à 50 caractères
     if (value.length > 50) {
       value = value.substring(0, 50)
-      showToast("⚠️ Maximum 50 caractères autorisés pour le nom", "warning")
+      showToast(" Maximum 50 caractères autorisés pour le nom", "warning")
       e.target.value = value
     }
   })

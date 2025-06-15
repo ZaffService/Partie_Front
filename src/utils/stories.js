@@ -1,6 +1,7 @@
 import { showToast } from "./notifications.js"
+import { formatStoryTime, renderStoryContent, updateLikeButton, updateMonetizationDisplay } from "./storyUtils.js"
 
-const API_URL = "http://localhost:5001"
+const API_URL = "https://mon-serveur-cub8.onrender.com"
 
 export async function createStory(userId, type, content, caption = "", backgroundColor = null) {
   try {
@@ -605,7 +606,7 @@ export function createStoryViewer(stories, initialIndex = 0) {
   const viewer = document.createElement("div")
   viewer.className = "fixed inset-0 bg-black z-50 flex items-center justify-center"
 
-  let currentIndex = initialIndex
+  const currentIndex = initialIndex
   let currentStory = stories[currentIndex]
   const currentUser = JSON.parse(localStorage.getItem("currentUser"))
 
@@ -719,11 +720,11 @@ export function createStoryViewer(stories, initialIndex = 0) {
       if (updatedStory) {
         currentStory = updatedStory
         stories[currentIndex] = updatedStory // Mettre à jour dans le tableau
-        updateLikeButton()
-        updateMonetizationDisplay()
+        updateLikeButton(viewer, currentStory)
+        updateMonetizationDisplay(viewer, currentStory)
       }
     } else {
-      showToast("❌ Connectez-vous pour liker les stories", "error")
+      showToast(" Connectez-vous pour liker les stories", "error")
     }
   })
 
@@ -743,169 +744,9 @@ export function createStoryViewer(stories, initialIndex = 0) {
       document.body.appendChild(heart)
 
       // Animation
-      heart.animate(
-        [
-          { transform: "translateY(0px) scale(1)", opacity: 1 },
-          { transform: "translateY(-50px) scale(0.5)", opacity: 0 },
-        ],
-        {
-          duration: 1000,
-          easing: "ease-out",
-        },
-      ).onfinish = () => heart.remove()
+      setTimeout(() => {
+        document.body.removeChild(heart)
+      }, 1000)
     }
-  }
-
-  function updateLikeButton() {
-    const likeBtn = viewer.querySelector("#likeBtn")
-    const isLiked = currentStory.likes.some((like) => like.userId === currentUser?.id)
-
-    likeBtn.className = `like-button flex items-center space-x-2 transition-all duration-200 transform hover:scale-110 ${isLiked ? "text-red-500 scale-110" : "text-white hover:text-red-300"}`
-    likeBtn.querySelector("span").textContent = currentStory.likes.length
-
-    console.log(`💖 Bouton like mis à jour: ${currentStory.likes.length} likes, isLiked: ${isLiked}`)
-  }
-
-  function updateMonetizationDisplay() {
-    const actionsDiv = viewer.querySelector(
-      ".absolute.bottom-0 .flex.items-center.justify-between .flex.items-center.space-x-2",
-    )
-
-    if (currentStory.isMonetized) {
-      actionsDiv.innerHTML = `
-        <div class="bg-green-500 px-3 py-1 rounded-full text-sm animate-pulse flex items-center space-x-1">
-          <i class="fas fa-coins text-yellow-300"></i>
-          <span class="font-bold">${currentStory.earnings} FCFA</span>
-        </div>
-      `
-    } else {
-      actionsDiv.innerHTML = `
-        <div class="bg-gray-700 px-3 py-1 rounded-full text-xs">
-          ${currentStory.likes.length}/3 ❤️
-        </div>
-      `
-    }
-  }
-
-  // Auto-progress (plus lent pour permettre l'interaction)
-  let progressInterval = setInterval(() => {
-    const progressBar = viewer.querySelector(".progress-bar")
-    let width = Number.parseFloat(progressBar.style.width) || 0
-    width += 0.5 // Plus lent pour tester
-    progressBar.style.width = width + "%"
-
-    if (width >= 100) {
-      nextStory()
-    }
-  }, 200) // Plus lent
-
-  function nextStory() {
-    clearInterval(progressInterval)
-    if (currentIndex < stories.length - 1) {
-      currentIndex++
-      updateStory()
-    } else {
-      document.body.removeChild(viewer)
-    }
-  }
-
-  function prevStory() {
-    clearInterval(progressInterval)
-    if (currentIndex > 0) {
-      currentIndex--
-      updateStory()
-    }
-  }
-
-  function updateStory() {
-    currentStory = stories[currentIndex]
-    viewer.querySelector("#storyContent").innerHTML = renderStoryContent(currentStory)
-
-    // Update progress bars
-    viewer.querySelectorAll(".progress-bar").forEach((bar, index) => {
-      if (index < currentIndex) {
-        bar.style.width = "100%"
-      } else if (index === currentIndex) {
-        bar.style.width = "0%"
-      } else {
-        bar.style.width = "0%"
-      }
-    })
-
-    // Update header
-    const header = viewer.querySelector(".flex.items-center.space-x-3")
-    header.innerHTML = `
-      <img src="${currentStory.userAvatar}" alt="${currentStory.userName}" class="w-10 h-10 rounded-full">
-      <div>
-        <div class="font-medium">${currentStory.userName}</div>
-        <div class="text-sm text-gray-300">${formatStoryTime(currentStory.timestamp)}</div>
-      </div>
-    `
-
-    updateLikeButton()
-    updateMonetizationDisplay()
-
-    // Restart progress
-    progressInterval = setInterval(() => {
-      const progressBar = viewer.querySelectorAll(".progress-bar")[currentIndex]
-      let width = Number.parseFloat(progressBar.style.width) || 0
-      width += 0.5
-      progressBar.style.width = width + "%"
-
-      if (width >= 100) {
-        nextStory()
-      }
-    }, 200)
-
-    // Mark as viewed
-    if (currentUser) {
-      viewStory(currentStory.id, currentUser.id)
-    }
-  }
-
-  viewer.querySelector("#nextStory").addEventListener("click", nextStory)
-  viewer.querySelector("#prevStory").addEventListener("click", prevStory)
-}
-
-function renderStoryContent(story) {
-  if (story.type === "text") {
-    return `
-      <div class="w-full h-full flex items-center justify-center p-8" style="background: ${story.backgroundColor}">
-        <div class="text-white text-2xl font-medium text-center leading-relaxed">
-          ${story.content}
-        </div>
-      </div>
-    `
-  } else if (story.type === "image") {
-    return `
-      <div class="w-full h-full relative">
-        <img src="${story.content}" alt="Story" class="w-full h-full object-cover">
-        ${
-          story.caption
-            ? `
-          <div class="absolute bottom-20 left-0 right-0 p-4">
-            <div class="bg-black bg-opacity-50 rounded-lg p-3 text-white">
-              ${story.caption}
-            </div>
-          </div>
-        `
-            : ""
-        }
-      </div>
-    `
-  }
-  return ""
-}
-
-function formatStoryTime(timestamp) {
-  const now = new Date()
-  const storyTime = new Date(timestamp)
-  const diffInHours = Math.floor((now - storyTime) / (1000 * 60 * 60))
-
-  if (diffInHours < 1) {
-    const diffInMinutes = Math.floor((now - storyTime) / (1000 * 60))
-    return `il y a ${diffInMinutes}m`
-  } else {
-    return `il y a ${diffInHours}h`
   }
 }

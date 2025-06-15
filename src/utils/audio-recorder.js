@@ -9,6 +9,16 @@ export function setupAudioRecorder() {
 
 export async function startVoiceRecording() {
   try {
+    // Vérifier le support HTTPS
+    if (location.protocol !== 'https:' && location.hostname !== 'localhost') {
+      throw new Error('HTTPS requis pour l\'enregistrement audio')
+    }
+
+    // Vérifier le support des APIs
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      throw new Error('API MediaDevices non supportée')
+    }
+
     console.log("Démarrage enregistrement vocal...")
     
     // Vérifier si on a un chat actuel
@@ -105,21 +115,11 @@ export async function startVoiceRecording() {
     return true
     
   } catch (error) {
-    console.error("Erreur accès microphone:", error)
-    
-    if (error.name === 'NotAllowedError') {
-      showToast("Veuillez autoriser l'accès au microphone", "error")
-    } else if (error.name === 'NotFoundError') {
-      showToast("Aucun microphone détecté", "error")
-    } else {
-      showToast("Erreur d'enregistrement vocal", "error")
-    }
-    
-    resetVoiceButton()
+    console.error('Erreur enregistrement:', error)
+    showToast(`Erreur: ${error.message}`, "error")
     return false
   }
 }
-
 export function stopVoiceRecording() {
   if (mediaRecorder && isRecording) {
     console.log("Arrêt de l'enregistrement...")

@@ -16,16 +16,28 @@ export function initializeAudioCall(contact) {
   startCall(contact, 'audio')
 } 
 
-export function initializeVideoCall(contact) {
-  if (currentCall) {
-    showToast("Un appel est déjà en cours", "error")
-    return
-  }
-  
-  console.log("Initialisation appel vidéo avec:", contact.name)
-  startCall(contact, 'video')
-}
+export async function startVideoCall(userId) {
+  try {
+    if (location.protocol !== 'https:' && location.hostname !== 'localhost') {
+      throw new Error('HTTPS requis pour les appels vidéo')
+    }
 
+    if (!navigator.mediaDevices) {
+      throw new Error('API MediaDevices non supportée')
+    }
+
+    if (currentCall) {
+      showToast("Un appel est déjà en cours", "error")
+      return
+    }
+    
+    console.log("Initialisation appel vidéo avec:", userId)
+    startCall(userId, 'video')
+  } catch (error) {
+    console.error('Erreur appel vidéo:', error)
+    showToast(`Erreur: ${error.message}`, "error")
+  }
+}
 async function startCall(contact, type) {
   currentCall = {
     contact: contact,

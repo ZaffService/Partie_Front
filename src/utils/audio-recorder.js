@@ -100,7 +100,7 @@ export async function startVoiceRecording() {
     
     // Mettre à jour l'interface
     updateVoiceButton(true)
-    showToast("🎤 Enregistrement en cours...", "info")
+    showToast(" Enregistrement en cours...", "info")
     
     return true
     
@@ -124,7 +124,7 @@ export function stopVoiceRecording() {
   if (mediaRecorder && isRecording) {
     console.log("Arrêt de l'enregistrement...")
     mediaRecorder.stop()
-    showToast("📤 Envoi du message vocal...", "info")
+    showToast(" Envoi du message vocal...", "info")
   }
 }
 
@@ -190,7 +190,7 @@ async function handleVoiceMessage(audioBlob, duration) {
     // Envoyer le message
     if (window.sendVoiceMessage) {
       await window.sendVoiceMessage(message)
-      showToast("✅ Message vocal envoyé", "success")
+      showToast("Message vocal envoyé", "success")
     } else {
       console.error("Fonction sendVoiceMessage non trouvée")
       showToast("Erreur: fonction d'envoi non disponible", "error")

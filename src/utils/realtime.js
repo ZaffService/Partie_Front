@@ -5,6 +5,8 @@ let onNewMessageCallback = null
 let onUserStatusCallback = null
 
 export function initializeRealTimeSync(onNewMessage, onUserStatus) {
+  console.log("Initialisation synchronisation temps réel...")
+
   onNewMessageCallback = onNewMessage
   onUserStatusCallback = onUserStatus
 
@@ -13,9 +15,9 @@ export function initializeRealTimeSync(onNewMessage, onUserStatus) {
     clearInterval(syncInterval)
   }
 
-  // Démarrer la synchronisation toutes les 3 secondes (plus lent pour éviter la surcharge)
-  syncInterval = setInterval(checkForUpdates, 3000)
-  console.log("Synchronisation temps réel initialisée avec", API_URL)
+  // Synchronisation plus rapide pour une expérience temps réel
+  syncInterval = setInterval(checkForUpdates, 2000) // Toutes les 2 secondes
+  console.log(" Synchronisation temps réel activée")
 }
 
 async function checkForUpdates() {
@@ -23,30 +25,32 @@ async function checkForUpdates() {
     const currentUser = getCurrentUser()
     if (!currentUser) return
 
-    // Vérifier les nouveaux messages pour tous les chats
+    // Récupérer tous les chats
     const response = await fetch(`${API_URL}/chats`)
     if (!response.ok) {
-      console.error("Erreur API:", response.status)
+      console.error(" Erreur API:", response.status)
       return
     }
 
     const allChats = await response.json()
+    console.log(` Vérification ${allChats.length} chats...`)
 
+    // Vérifier les nouveaux messages dans TOUS les chats
     for (const chat of allChats) {
-      if (chat.id === currentUser.id) continue // Ignorer ses propres données
-
       const messages = chat.messages || []
       const lastCount = lastMessageCounts.get(chat.id) || 0
 
       if (messages.length > lastCount) {
         // Il y a de nouveaux messages
         const newMessages = messages.slice(lastCount)
+        console.log(` ${newMessages.length} nouveaux messages dans chat ${chat.id}`)
 
         for (const message of newMessages) {
-          // Vérifier si le message nous est destiné ET qu'il n'a pas été envoyé par nous
-          if (message.receiverId === currentUser.id && message.senderId !== currentUser.id) {
+          // Vérifier si le message nous concerne
+          if (shouldNotifyUser(currentUser.id, chat, message)) {
+            console.log(` Notification pour message de ${message.senderId}`)
             if (onNewMessageCallback) {
-              onNewMessageCallback(message)
+              onNewMessageCallback(message, chat)
             }
           }
         }
@@ -57,9 +61,14 @@ async function checkForUpdates() {
 
     // Vérifier les statuts utilisateurs
     if (onUserStatusCallback) {
-      for (const chat of allChats) {
-        if (chat.id !== currentUser.id) {
-          onUserStatusCallback(chat.id, chat.isOnline || false)
+      const usersResponse = await fetch(`${API_URL}/users`)
+      if (usersResponse.ok) {
+        const users = await usersResponse.json()
+
+        for (const user of users) {
+          if (user.id !== currentUser.id) {
+            onUserStatusCallback(user.id, user.isOnline || false)
+          }
         }
       }
     }
@@ -68,14 +77,32 @@ async function checkForUpdates() {
   }
 }
 
+function shouldNotifyUser(currentUserId, chat, message) {
+  // Notifier si :
+  // 1. C'est un chat qui appartient à l'utilisateur actuel ET le message vient d'un autre
+  // 2. OU c'est un message dans un chat où l'utilisateur actuel est le contact
+
+  return (
+    (chat.ownerId === currentUserId && message.senderId !== currentUserId) ||
+    (chat.contactId === currentUserId && message.senderId !== currentUserId)
+  )
+}
+
 function getCurrentUser() {
   const userData = localStorage.getItem("currentUser")
   return userData ? JSON.parse(userData) : null
 }
 
 export function stopRealTimeSync() {
+  console.log(" Arrêt synchronisation temps réel")
   if (syncInterval) {
     clearInterval(syncInterval)
     syncInterval = null
   }
+}
+
+// Fonction pour forcer une synchronisation immédiate
+export function forceSyncNow() {
+  console.log("⚡ Synchronisation forcée")
+  checkForUpdates()
 }

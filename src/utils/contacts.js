@@ -12,77 +12,35 @@ function generateRandomAvatar(name, gender = null) {
 
 export async function addContact(currentUserId, phone, name) {
   try {
-    // Validation personnalisée avec toasts
-    if (!name && !phone) {
-      showToast("❌ Veuillez remplir tous les champs", "error")
+    // Validation
+    if (!name || !phone) {
+      showToast(" Veuillez remplir tous les champs", "error")
       return null
     }
 
-    if (!name) {
-      showToast("❌ Le nom du contact est obligatoire", "error")
+    if (name.length < 2 || name.length > 50) {
+      showToast(" Le nom doit contenir entre 2 et 50 caractères", "error")
       return null
     }
 
-    if (!phone) {
-      showToast("❌ Le numéro de téléphone est obligatoire", "error")
+    if (!/^\d{9}$/.test(phone) || !phone.startsWith("7")) {
+      showToast(" Numéro invalide (9 chiffres commençant par 7)", "error")
       return null
     }
 
-    // Validation du nom
-    if (name.length < 2) {
-      showToast("❌ Le nom doit contenir au moins 2 caractères", "error")
-      return null
-    }
-
-    if (name.length > 50) {
-      showToast("❌ Le nom ne peut pas dépasser 50 caractères", "error")
-      return null
-    }
-
-    // Validation du téléphone
-    if (!/^\d+$/.test(phone)) {
-      showToast("❌ Le numéro ne doit contenir que des chiffres", "error")
-      return null
-    }
-
-    if (phone.length !== 9) {
-      showToast("❌ Le numéro doit contenir exactement 9 chiffres", "error")
-      return null
-    }
-
-    if (!phone.startsWith("7")) {
-      showToast("❌ Le numéro doit commencer par 7 (format sénégalais)", "error")
-      return null
-    }
-
-    // Vérifier si l'utilisateur existe déjà dans la table users
+    // Vérifier si l'utilisateur cible existe
     const usersResponse = await fetch(`${API_URL}/users`)
-
     if (!usersResponse.ok) {
-      showToast("❌ Erreur de connexion au serveur", "error")
+      showToast(" Erreur de connexion au serveur", "error")
       return null
     }
 
     const users = await usersResponse.json()
-
     let targetUser = users.find((user) => user.phone === phone)
 
-    if (targetUser) {
-      // L'utilisateur existe déjà
-      if (targetUser.id === currentUserId) {
-        showToast("❌ Vous ne pouvez pas vous ajouter vous-même comme contact", "error")
-        return null
-      }
-
-      // Créer un chat pour ce contact s'il n'existe pas
-      await createChatIfNotExists(targetUser)
-
-      showToast(`✅ ${targetUser.name} ajouté à vos contacts avec succès`, "success")
-      return targetUser
-    } else {
-      // Créer un nouvel utilisateur dans la table users
+    if (!targetUser) {
+      // Créer un nouvel utilisateur
       const newUserId = (users.length + 1).toString()
-
       targetUser = {
         id: newUserId,
         name: name,
@@ -98,7 +56,6 @@ export async function addContact(currentUserId, phone, name) {
         groups: [],
       }
 
-      // Ajouter le nouvel utilisateur à la table users
       const createUserResponse = await fetch(`${API_URL}/users`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -106,68 +63,82 @@ export async function addContact(currentUserId, phone, name) {
       })
 
       if (!createUserResponse.ok) {
-        showToast("❌ Erreur lors de la création du nouveau contact", "error")
+        showToast(" Erreur lors de la création du contact", "error")
         return null
       }
-
-      // Créer un chat pour ce nouveau contact
-      await createChatIfNotExists(targetUser)
-
-      showToast(`✅ Nouveau contact ${name} créé et ajouté avec succès`, "success")
-      return targetUser
     }
+
+    if (targetUser.id === currentUserId) {
+      showToast(" Vous ne pouvez pas vous ajouter vous-même", "error")
+      return null
+    }
+
+    // Créer un chat UNIQUEMENT pour l'utilisateur actuel
+    await createPersonalChat(currentUserId, targetUser)
+
+    showToast(` ${targetUser.name} ajouté à vos contacts`, "success")
+    return targetUser
   } catch (error) {
     console.error("Erreur ajout contact:", error)
-    showToast("❌ Erreur de connexion. Vérifiez votre connexion internet.", "error")
+    showToast(" Erreur de connexion", "error")
     return null
   }
 }
 
-async function createChatIfNotExists(targetUser) {
+async function createPersonalChat(currentUserId, targetUser) {
   try {
-    // Vérifier si le chat existe déjà
+    // Vérifier si ce chat existe déjà pour cet utilisateur
     const chatsResponse = await fetch(`${API_URL}/chats`)
-    const chats = await chatsResponse.json()
+    const allChats = await chatsResponse.json()
 
-    const existingChat = chats.find((chat) => chat.id === targetUser.id)
+    // Chercher un chat existant pour cet utilisateur avec ce contact
+    const existingChat = allChats.find((chat) => chat.ownerId === currentUserId && chat.contactId === targetUser.id)
 
-    if (!existingChat) {
-      // Créer un nouveau chat
-      const newChat = {
-        id: targetUser.id,
-        name: targetUser.name,
-        phone: targetUser.phone,
-        avatar: targetUser.avatar,
-        status: targetUser.status,
-        isOnline: targetUser.isOnline,
-        lastSeen: targetUser.lastSeen,
-        unread: 0,
-        time: new Date().toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" }),
-        lastMessage: "",
-        lastMessageTime: new Date().toISOString(),
-        messages: [],
-      }
-
-      await fetch(`${API_URL}/chats`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(newChat),
-      })
-
-      console.log("Chat créé pour:", targetUser.name)
+    if (existingChat) {
+      console.log("Chat déjà existant pour cet utilisateur")
+      return
     }
+
+    // Créer un nouveau chat personnel
+    const personalChat = {
+      id: `${currentUserId}_${targetUser.id}_${Date.now()}`, // ID unique
+      ownerId: currentUserId, // IMPORTANT: Propriétaire du chat
+      contactId: targetUser.id, // ID du contact
+      name: targetUser.name,
+      phone: targetUser.phone,
+      avatar: targetUser.avatar,
+      status: targetUser.status,
+      isOnline: targetUser.isOnline,
+      lastSeen: targetUser.lastSeen,
+      unread: 0,
+      time: new Date().toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" }),
+      lastMessage: "",
+      lastMessageTime: new Date().toISOString(),
+      messages: [],
+    }
+
+    await fetch(`${API_URL}/chats`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(personalChat),
+    })
+
+    console.log(` Chat personnel créé pour ${currentUserId} avec ${targetUser.name}`)
   } catch (error) {
-    console.error("Erreur création chat:", error)
+    console.error("Erreur création chat personnel:", error)
   }
 }
 
 export async function getContacts(userId) {
   try {
-    const usersResponse = await fetch(`${API_URL}/users`)
-    const allUsers = await usersResponse.json()
+    // Récupérer SEULEMENT les chats de cet utilisateur
+    const chatsResponse = await fetch(`${API_URL}/chats`)
+    const allChats = await chatsResponse.json()
 
-    // Retourner tous les utilisateurs sauf l'utilisateur actuel
-    return allUsers.filter((user) => user.id !== userId)
+    // Filtrer les chats qui appartiennent à cet utilisateur
+    const userChats = allChats.filter((chat) => chat.ownerId === userId)
+
+    return userChats
   } catch (error) {
     console.error("Erreur récupération contacts:", error)
     return []
@@ -214,7 +185,7 @@ export function createAddContactModal(onContactAdded) {
         
         <div class="text-xs text-gray-500 bg-[#2a3942] p-3 rounded-lg">
           <i class="fas fa-info-circle mr-2"></i>
-          💡 Si ce numéro n'existe pas encore, un nouveau compte sera créé automatiquement.
+           Ce contact sera ajouté UNIQUEMENT à votre liste personnelle.
         </div>
         
         <div class="flex space-x-3">
@@ -251,25 +222,21 @@ export function createAddContactModal(onContactAdded) {
   closeModal.addEventListener("click", closeModalFn)
   cancelBtn.addEventListener("click", closeModalFn)
 
-  // Validation en temps réel du téléphone
+  // Validation en temps réel
   phoneInput.addEventListener("input", (e) => {
     let value = e.target.value.replace(/[^0-9]/g, "")
-
     if (value.length > 9) {
       value = value.substring(0, 9)
-      showToast("⚠️ Maximum 9 chiffres autorisés", "warning")
+      showToast(" Maximum 9 chiffres autorisés", "warning")
     }
-
     e.target.value = value
   })
 
-  // Validation en temps réel du nom
   nameInput.addEventListener("input", (e) => {
     let value = e.target.value
-
     if (value.length > 50) {
       value = value.substring(0, 50)
-      showToast("⚠️ Maximum 50 caractères autorisés pour le nom", "warning")
+      showToast(" Maximum 50 caractères autorisés", "warning")
       e.target.value = value
     }
   })
@@ -282,7 +249,7 @@ export function createAddContactModal(onContactAdded) {
 
     const currentUser = JSON.parse(localStorage.getItem("currentUser"))
     if (!currentUser) {
-      showToast("❌ Erreur: utilisateur non connecté", "error")
+      showToast(" Erreur: utilisateur non connecté", "error")
       return
     }
 

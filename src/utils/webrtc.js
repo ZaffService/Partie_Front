@@ -11,7 +11,7 @@ const configuration = {
 
 export async function initializeCall(contact, type) {
   try {
-    console.log(`🎥 Initialisation appel ${type} avec ${contact.name}`)
+    console.log(`Initialisation appel ${type} avec ${contact.name}`)
 
     // Créer la connexion peer
     peerConnection = new RTCPeerConnection(configuration)
@@ -29,33 +29,33 @@ export async function initializeCall(contact, type) {
           : false,
     }
 
-    console.log("📹 Demande d'accès à la caméra/micro...")
+    console.log("Demande d'accès à la caméra/micro...")
     localStream = await navigator.mediaDevices.getUserMedia(constraints)
-    console.log("✅ Stream local obtenu:", localStream)
-    console.log("📊 Tracks vidéo:", localStream.getVideoTracks().length)
-    console.log("📊 Tracks audio:", localStream.getAudioTracks().length)
+    console.log(" Stream local obtenu:", localStream)
+    console.log(" Tracks vidéo:", localStream.getVideoTracks().length)
+    console.log(" Tracks audio:", localStream.getAudioTracks().length)
 
     // Ajouter le stream local à la connexion
     localStream.getTracks().forEach((track) => {
       peerConnection.addTrack(track, localStream)
-      console.log("✅ Track ajouté:", track.kind, track.label)
+      console.log(" Track ajouté:", track.kind, track.label)
     })
 
     // Gérer le stream distant
     peerConnection.ontrack = (event) => {
-      console.log("📡 Stream distant reçu:", event.streams[0])
+      console.log(" Stream distant reçu:", event.streams[0])
       remoteStream = event.streams[0]
       const remoteVideo = document.getElementById("remoteVideo")
       if (remoteVideo) {
         remoteVideo.srcObject = remoteStream
-        console.log("✅ Stream distant assigné à la vidéo")
+        console.log("Stream distant assigné à la vidéo")
       }
     }
 
     // Gérer les candidats ICE
     peerConnection.onicecandidate = (event) => {
       if (event.candidate) {
-        console.log("🧊 ICE candidate:", event.candidate)
+        console.log(" ICE candidate:", event.candidate)
       }
     }
 
@@ -81,14 +81,14 @@ export async function initializeCall(contact, type) {
 
     return true
   } catch (error) {
-    console.error("❌ Erreur initialisation appel:", error)
+    console.error(" Erreur initialisation appel:", error)
 
     if (error.name === "NotAllowedError") {
-      showToast("❌ Veuillez autoriser l'accès à la caméra/microphone", "error")
+      showToast(" Veuillez autoriser l'accès à la caméra/microphone", "error")
     } else if (error.name === "NotFoundError") {
-      showToast("❌ Aucun périphérique audio/vidéo détecté", "error")
+      showToast(" Aucun périphérique audio/vidéo détecté", "error")
     } else {
-      showToast("❌ Erreur lors de l'initialisation de l'appel", "error")
+      showToast(" Erreur lors de l'initialisation de l'appel", "error")
     }
 
     return false
@@ -220,17 +220,17 @@ function setupLocalVideo() {
   const placeholder = document.getElementById("localVideoPlaceholder")
 
   if (localVideo && localStream) {
-    console.log("🎥 Configuration vidéo locale...")
-    console.log("📊 Stream disponible:", localStream)
-    console.log("📊 Tracks vidéo:", localStream.getVideoTracks())
+    console.log(" Configuration vidéo locale...")
+    console.log(" Stream disponible:", localStream)
+    console.log(" Tracks vidéo:", localStream.getVideoTracks())
 
     // Assigner le stream directement
     localVideo.srcObject = localStream
 
     // Événements pour debug
     localVideo.onloadedmetadata = () => {
-      console.log("✅ Métadonnées vidéo chargées")
-      console.log("📐 Dimensions:", localVideo.videoWidth, "x", localVideo.videoHeight)
+      console.log(" Métadonnées vidéo chargées")
+      console.log(" Dimensions:", localVideo.videoWidth, "x", localVideo.videoHeight)
 
       // Cacher le placeholder
       if (placeholder) {
@@ -239,14 +239,14 @@ function setupLocalVideo() {
     }
 
     localVideo.onplay = () => {
-      console.log("▶️ Vidéo locale en lecture")
+      console.log("Vidéo locale en lecture")
       if (placeholder) {
         placeholder.style.display = "none"
       }
     }
 
     localVideo.onerror = (error) => {
-      console.error("❌ Erreur vidéo locale:", error)
+      console.error(" Erreur vidéo locale:", error)
       if (placeholder) {
         placeholder.innerHTML = `
           <div class="text-center text-red-400">
@@ -261,16 +261,16 @@ function setupLocalVideo() {
     localVideo
       .play()
       .then(() => {
-        console.log("✅ Vidéo locale démarrée avec succès")
+        console.log(" Vidéo locale démarrée avec succès")
       })
       .catch((error) => {
-        console.error("❌ Erreur démarrage vidéo locale:", error)
+        console.error(" Erreur démarrage vidéo locale:", error)
       })
 
     // Vérifier périodiquement si la vidéo fonctionne
     const checkVideo = setInterval(() => {
       if (localVideo.videoWidth > 0 && localVideo.videoHeight > 0) {
-        console.log("✅ Vidéo locale active:", localVideo.videoWidth, "x", localVideo.videoHeight)
+        console.log(" Vidéo locale active:", localVideo.videoWidth, "x", localVideo.videoHeight)
         if (placeholder) {
           placeholder.style.display = "none"
         }
@@ -283,7 +283,7 @@ function setupLocalVideo() {
       clearInterval(checkVideo)
     }, 10000)
   } else {
-    console.error("❌ Élément vidéo ou stream manquant")
+    console.error(" Élément vidéo ou stream manquant")
     console.log("localVideo:", localVideo)
     console.log("localStream:", localStream)
 
@@ -323,7 +323,7 @@ function setupCallControls(callType) {
       muteBtn.classList.toggle("bg-red-500", isMuted)
       muteBtn.classList.toggle("bg-gray-700", !isMuted)
 
-      showToast(isMuted ? "🔇 Micro coupé" : "🎤 Micro activé", "info")
+      showToast(isMuted ? " Micro coupé" : "🎤 Micro activé", "info")
     })
   }
 
@@ -335,7 +335,7 @@ function setupCallControls(callType) {
       if (localStream) {
         localStream.getVideoTracks().forEach((track) => {
           track.enabled = !cameraOff
-          console.log(`📹 Vidéo ${cameraOff ? "désactivée" : "activée"}:`, track.label)
+          console.log(` Vidéo ${cameraOff ? "désactivée" : "activée"}:`, track.label)
         })
       }
 
@@ -357,7 +357,7 @@ function setupCallControls(callType) {
         }
       }
 
-      showToast(cameraOff ? "📹 Caméra désactivée" : "🎥 Caméra activée", "info")
+      showToast(cameraOff ? " Caméra désactivée" : " Caméra activée", "info")
     })
   }
 
@@ -367,7 +367,7 @@ function setupCallControls(callType) {
       speakerOn = !speakerOn
       speakerBtn.classList.toggle("bg-green-500", speakerOn)
       speakerBtn.classList.toggle("bg-gray-700", !speakerOn)
-      showToast(speakerOn ? "🔊 Haut-parleur activé" : "🔇 Haut-parleur désactivé", "info")
+      showToast(speakerOn ? " Haut-parleur activé" : " Haut-parleur désactivé", "info")
     })
   }
 
@@ -385,7 +385,7 @@ function simulateCallAnswer() {
 
   const callStatus = document.getElementById("callStatus")
   if (callStatus) {
-    callStatus.textContent = currentCall.type === "video" ? "📹 Appel vidéo connecté" : "📞 Appel connecté"
+    callStatus.textContent = currentCall.type === "video" ? "Appel vidéo connecté" : " Appel connecté"
   }
 
   // Pour les appels vidéo, simuler une vidéo distante
@@ -401,7 +401,7 @@ function simulateCallAnswer() {
   }
 
   startCallTimer()
-  showToast("✅ Appel connecté", "success")
+  showToast("Appel connecté", "success")
 }
 
 function simulateRemoteVideo() {
@@ -463,9 +463,9 @@ function simulateRemoteVideo() {
     try {
       const stream = canvas.captureStream(30)
       remoteVideo.srcObject = stream
-      console.log("✅ Vidéo distante simulée créée")
+      console.log(" Vidéo distante simulée créée")
     } catch (error) {
-      console.error("❌ Erreur création vidéo simulée:", error)
+      console.error(" Erreur création vidéo simulée:", error)
     }
   }
 }
@@ -552,7 +552,7 @@ export async function endCall() {
   if (localStream) {
     localStream.getTracks().forEach((track) => {
       track.stop()
-      console.log("🛑 Track arrêté:", track.kind, track.label)
+      console.log(" Track arrêté:", track.kind, track.label)
     })
     localStream = null
   }
@@ -577,9 +577,9 @@ export async function endCall() {
   if (duration > 0) {
     const minutes = Math.floor(duration / 60)
     const seconds = duration % 60
-    showToast(`📞 Appel terminé - ${minutes}:${seconds.toString().padStart(2, "0")}`, "info")
+    showToast(` Appel terminé - ${minutes}:${seconds.toString().padStart(2, "0")}`, "info")
   } else {
-    showToast("📞 Appel annulé", "info")
+    showToast(" Appel annulé", "info")
   }
 
   currentCall = null
@@ -617,7 +617,7 @@ async function recordCall(contact, type, duration) {
         id: Date.now(),
         senderId: currentUser.id,
         receiverId: contact.id,
-        text: `${type === "video" ? "📹 Appel vidéo" : "📞 Appel vocal"} - ${durationText}`,
+        text: `${type === "video" ? "Appel vidéo" : " Appel vocal"} - ${durationText}`,
         sent: true,
         time: new Date().toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" }),
         timestamp: new Date().toISOString(),

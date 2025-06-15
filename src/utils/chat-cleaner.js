@@ -2,7 +2,7 @@ const API_URL = "https://mon-serveur-cub8.onrender.com"
 
 export async function cleanDuplicateChats() {
   try {
-    console.log("🧹 Nettoyage des chats dupliqués...")
+    console.log(" Nettoyage des chats dupliqués...")
 
     // Récupérer tous les chats
     const chatsResponse = await fetch(`${API_URL}/chats`)
@@ -28,7 +28,7 @@ export async function cleanDuplicateChats() {
     // Traiter chaque groupe de chats
     for (const [name, duplicateChats] of Object.entries(chatsByName)) {
       if (duplicateChats.length > 1) {
-        console.log(`🔍 Doublons trouvés pour ${name}:`, duplicateChats.length)
+        console.log(` Doublons trouvés pour ${name}:`, duplicateChats.length)
 
         // Trouver l'utilisateur correspondant
         const user = users.find((u) => u.name === name)
@@ -116,7 +116,7 @@ export async function cleanDuplicateChats() {
         await fetch(`${API_URL}/chats/${chatId}`, {
           method: "DELETE",
         })
-        console.log(`🗑️ Chat ${chatId} supprimé`)
+        console.log(` Chat ${chatId} supprimé`)
       } catch (error) {
         console.error(`Erreur suppression chat ${chatId}:`, error)
       }
@@ -130,14 +130,14 @@ export async function cleanDuplicateChats() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(chat),
         })
-        console.log(`✅ Chat ${chat.name} mis à jour`)
+        console.log(` Chat ${chat.name} mis à jour`)
       } catch (error) {
         console.error(`Erreur mise à jour chat ${chat.name}:`, error)
       }
     }
 
     console.log(
-      `🧹 Nettoyage terminé: ${chatsToDelete.length} chats supprimés, ${chatsToUpdate.length} chats mis à jour`,
+      `Nettoyage terminé: ${chatsToDelete.length} chats supprimés, ${chatsToUpdate.length} chats mis à jour`,
     )
 
     return {
@@ -145,7 +145,7 @@ export async function cleanDuplicateChats() {
       updated: chatsToUpdate.length,
     }
   } catch (error) {
-    console.error("❌ Erreur nettoyage chats:", error)
+    console.error(" Erreur nettoyage chats:", error)
     throw error
   }
 }
@@ -153,15 +153,15 @@ export async function cleanDuplicateChats() {
 function getMessagePreview(message) {
   switch (message.type) {
     case "image":
-      return "📷 Photo"
+      return " Photo"
     case "video":
-      return "🎥 Vidéo"
+      return " Vidéo"
     case "audio":
-      return "🎵 Audio"
+      return " Audio"
     case "voice":
-      return "🎤 Message vocal"
+      return " Message vocal"
     case "document":
-      return `📎 ${message.fileName}`
+      return ` ${message.fileName}`
     default:
       return message.text
   }

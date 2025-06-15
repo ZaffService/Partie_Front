@@ -49,7 +49,7 @@ async function startCall(contact, type) {
         audio: true 
       })
 
-      console.log("✅ Accès caméra accordé")
+      console.log("Accès caméra accordé")
     } catch (error) {
 
 
@@ -59,7 +59,7 @@ async function startCall(contact, type) {
 
 
 
-      console.error("❌ Erreur accès caméra:", error)
+      console.error(" Erreur accès caméra:", error)
       showToast("Veuillez autoriser l'accès à la caméra", "error")
       return
     }
@@ -275,13 +275,13 @@ function setupLocalVideo() {
 
 
     localVideo.play().then(() => {
-      console.log("✅ Votre caméra est active")
+      console.log("Votre caméra est active")
     }).catch(error => {
-      console.error("❌ Erreur démarrage caméra:", error)
+      console.error(" Erreur démarrage caméra:", error)
     })
   } else {
 
-    console.error("❌ Vidéo ou stream manquant")
+    console.error(" Vidéo ou stream manquant")
   }
 }
 
@@ -312,7 +312,7 @@ function setupCallControls() {
       muteBtn.innerHTML = `<i class="fas fa-microphone${isMuted ? '-slash' : ''} text-xl text-white"></i>`
       muteBtn.classList.toggle('bg-red-500', isMuted)
 
-      showToast(isMuted ? "🔇 Micro coupé" : "🎤 Micro activé", "info")
+      showToast(isMuted ? " Micro coupé" : " Micro activé", "info")
     })
   }
   
@@ -340,7 +340,7 @@ function setupCallControls() {
       cameraBtn.innerHTML = `<i class="fas fa-video${cameraOff ? '-slash' : ''} text-xl text-white"></i>`
       cameraBtn.classList.toggle('bg-red-500', cameraOff)
 
-      showToast(cameraOff ? "📹 Caméra désactivée" : "🎥 Caméra activée", "info")
+      showToast(cameraOff ? "Caméra désactivée" : " Caméra activée", "info")
     })
   }
   
@@ -351,7 +351,7 @@ function setupCallControls() {
 
 
 
-      showToast("🔊 Haut-parleur", "info")
+      showToast(" Haut-parleur", "info")
     })
   }
   
@@ -375,7 +375,7 @@ function answerCall() {
   const callStatus = document.getElementById('callStatus')
   if (callStatus) {
 
-    callStatus.textContent = currentCall.type === 'video' ? '📹 Appel vidéo connecté' : '📞 Appel connecté'
+    callStatus.textContent = currentCall.type === 'video' ? ' Appel vidéo connecté' : ' Appel connecté'
   }
   
 
@@ -387,7 +387,7 @@ function answerCall() {
 
 
 
-  showToast("✅ Appel connecté", "success")
+  showToast("Appel connecté", "success")
 }
 
 
@@ -517,13 +517,13 @@ function playRingtone() {
 
 
 
-  console.log("🔔 Sonnerie...")
+  console.log(" Sonnerie...")
 }
 
 function stopRingtone() {
 
 
-  console.log("🔕 Arrêt sonnerie")
+  console.log("Arrêt sonnerie")
 }
 
 
@@ -574,10 +574,10 @@ async function endCall() {
     const minutes = Math.floor(duration / 60)
     const seconds = duration % 60
 
-    showToast(`📞 Appel terminé - ${minutes}:${seconds.toString().padStart(2, '0')}`, "info")
+    showToast(` Appel terminé - ${minutes}:${seconds.toString().padStart(2, '0')}`, "info")
   } else {
 
-    showToast("📞 Appel annulé", "info")
+    showToast(" Appel annulé", "info")
   }
   
 
@@ -598,7 +598,7 @@ async function sendCallMessage(contact, callType, duration) {
       id: Date.now(),
       senderId: currentUser.id,
       receiverId: contact.id,
-      text: `${callType === 'video' ? '📹 Appel vidéo' : '📞 Appel vocal'} - ${durationText}`,
+      text: `${callType === 'video' ? 'Appel vidéo' : 'Appel vocal'} - ${durationText}`,
       sent: true,
       time: new Date().toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" }),
       timestamp: new Date().toISOString(),

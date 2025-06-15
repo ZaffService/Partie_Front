@@ -7,9 +7,9 @@ export async function createStory(userId, type, content, caption = "", backgroun
     // Validation personnalisée
     if (!content) {
       if (type === "text") {
-        showToast("❌ Veuillez saisir du texte pour votre story", "error")
+        showToast(" Veuillez saisir du texte pour votre story", "error")
       } else {
-        showToast("❌ Veuillez sélectionner une image pour votre story", "error")
+        showToast("Veuillez sélectionner une image pour votre story", "error")
       }
       return null
     }
@@ -21,20 +21,20 @@ export async function createStory(userId, type, content, caption = "", backgroun
       }
 
       if (content.length > 200) {
-        showToast("❌ Votre story ne peut pas dépasser 200 caractères", "error")
+        showToast(" Votre story ne peut pas dépasser 200 caractères", "error")
         return null
       }
     }
 
     if (caption && caption.length > 100) {
-      showToast("❌ La légende ne peut pas dépasser 100 caractères", "error")
+      showToast("La légende ne peut pas dépasser 100 caractères", "error")
       return null
     }
 
     const userResponse = await fetch(`${API_URL}/users/${userId}`)
 
     if (!userResponse.ok) {
-      showToast("❌ Erreur lors de la récupération de vos informations", "error")
+      showToast(" Erreur lors de la récupération de vos informations", "error")
       return null
     }
 
@@ -65,15 +65,15 @@ export async function createStory(userId, type, content, caption = "", backgroun
     })
 
     if (!response.ok) {
-      showToast("❌ Erreur lors de la publication de votre story", "error")
+      showToast(" Erreur lors de la publication de votre story", "error")
       return null
     }
 
-    showToast("✅ Story publiée avec succès ! 🎉", "success")
+    showToast("Story publiée avec succès ! ", "success")
     return await response.json()
   } catch (error) {
     console.error("Erreur création story:", error)
-    showToast("❌ Erreur de connexion. Vérifiez votre connexion internet.", "error")
+    showToast(" Erreur de connexion. Vérifiez votre connexion internet.", "error")
     return null
   }
 }
@@ -124,7 +124,7 @@ export async function viewStory(storyId, viewerId) {
 
 export async function likeStory(storyId, userId) {
   try {
-    console.log(`💖 Tentative de like story ${storyId} par user ${userId}`)
+    console.log(` Tentative de like story ${storyId} par user ${userId}`)
 
     const response = await fetch(`${API_URL}/stories/${storyId}`)
     if (!response.ok) {
@@ -132,7 +132,7 @@ export async function likeStory(storyId, userId) {
     }
 
     const story = await response.json()
-    console.log(`📖 Story récupérée:`, story)
+    console.log(`Story récupérée:`, story)
 
     const likeIndex = story.likes.findIndex((like) => like.userId === userId)
 
@@ -142,13 +142,13 @@ export async function likeStory(storyId, userId) {
         userId: userId,
         timestamp: new Date().toISOString(),
       })
-      console.log(`✅ Like ajouté ! Total: ${story.likes.length} likes`)
-      showToast("❤️ Story likée !", "success")
+      console.log(` Like ajouté ! Total: ${story.likes.length} likes`)
+      showToast(" Story likée !", "success")
     } else {
       // Retirer le like
       story.likes.splice(likeIndex, 1)
-      console.log(`❌ Like retiré ! Total: ${story.likes.length} likes`)
-      showToast("💔 Like retiré", "info")
+      console.log(` Like retiré ! Total: ${story.likes.length} likes`)
+      showToast("Like retiré", "info")
     }
 
     // Sauvegarder la story mise à jour
@@ -162,22 +162,22 @@ export async function likeStory(storyId, userId) {
       throw new Error(`Erreur sauvegarde story: ${updateResponse.status}`)
     }
 
-    console.log(`💾 Story sauvegardée avec ${story.likes.length} likes`)
+    console.log(` Story sauvegardée avec ${story.likes.length} likes`)
 
     // Vérifier la monétisation
     await checkMonetization(story)
 
     return story
   } catch (error) {
-    console.error("❌ Erreur like story:", error)
-    showToast("❌ Erreur lors du like. Réessayez.", "error")
+    console.error(" Erreur like story:", error)
+    showToast(" Erreur lors du like. Réessayez.", "error")
     return null
   }
 }
 
 async function checkMonetization(story) {
   try {
-    console.log(`🔍 Vérification monétisation pour story ${story.id}`)
+    console.log(` Vérification monétisation pour story ${story.id}`)
 
     // Récupérer les paramètres de monétisation
     const monetizationResponse = await fetch(`${API_URL}/monetization`)
@@ -191,13 +191,13 @@ async function checkMonetization(story) {
     // Vérifier si la story a atteint le seuil dans les 24h
     const storyAge = (Date.now() - new Date(story.timestamp).getTime()) / (1000 * 60 * 60)
 
-    console.log(`📊 Story ${story.id}:`)
+    console.log(` Story ${story.id}:`)
     console.log(`   - Likes: ${story.likes.length}/${likesThreshold}`)
     console.log(`   - Âge: ${storyAge.toFixed(1)}h/${timeWindow}h`)
     console.log(`   - Déjà monétisée: ${story.isMonetized}`)
 
     if (story.likes.length >= likesThreshold && storyAge <= timeWindow && !story.isMonetized) {
-      console.log(`🎉 MONÉTISATION DÉCLENCHÉE !`)
+      console.log(` MONÉTISATION DÉCLENCHÉE !`)
 
       // Marquer comme monétisée
       story.isMonetized = true
@@ -222,18 +222,18 @@ async function checkMonetization(story) {
         await recordTransaction(story.userId, story.id, rewardAmount)
 
         // Notification spéciale
-        showToast(`🎉 FÉLICITATIONS ! ${story.userName} a gagné ${rewardAmount} FCFA pour sa story !`, "success")
+        showToast(` FÉLICITATIONS ! ${story.userName} a gagné ${rewardAmount} FCFA pour sa story !`, "success")
 
         // Notification sonore
         playMonetizationSound()
 
-        console.log(`💰 ${story.userName} a gagné ${rewardAmount} FCFA !`)
+        console.log(` ${story.userName} a gagné ${rewardAmount} FCFA !`)
       }
     } else {
-      console.log(`⏳ Pas encore de monétisation (${story.likes.length}/${likesThreshold} likes)`)
+      console.log(` Pas encore de monétisation (${story.likes.length}/${likesThreshold} likes)`)
     }
   } catch (error) {
-    console.error("❌ Erreur vérification monétisation:", error)
+    console.error(" Erreur vérification monétisation:", error)
   }
 }
 
@@ -265,7 +265,7 @@ function playMonetizationSound() {
 
 async function creditUser(userId, amount) {
   try {
-    console.log(`💳 Crédit de ${amount} FCFA pour user ${userId}`)
+    console.log(` Crédit de ${amount} FCFA pour user ${userId}`)
 
     const userResponse = await fetch(`${API_URL}/users/${userId}`)
     if (!userResponse.ok) {
@@ -290,7 +290,7 @@ async function creditUser(userId, amount) {
       throw new Error(`Erreur mise à jour user: ${updateResponse.status}`)
     }
 
-    console.log(`✅ Utilisateur ${user.name} crédité:`)
+    console.log(` Utilisateur ${user.name} crédité:`)
     console.log(`   - Ancien solde: ${oldBalance} FCFA`)
     console.log(`   - Nouveau solde: ${user.walletBalance} FCFA`)
     console.log(`   - Gains totaux: ${user.totalEarnings} FCFA`)
@@ -301,12 +301,12 @@ async function creditUser(userId, amount) {
       currentUser.walletBalance = user.walletBalance
       currentUser.totalEarnings = user.totalEarnings
       localStorage.setItem("currentUser", JSON.stringify(currentUser))
-      console.log(`🔄 Utilisateur local mis à jour`)
+      console.log(`Utilisateur local mis à jour`)
     }
 
     return true
   } catch (error) {
-    console.error("❌ Erreur crédit utilisateur:", error)
+    console.error(" Erreur crédit utilisateur:", error)
     return false
   }
 }
@@ -341,9 +341,9 @@ async function recordTransaction(userId, storyId, amount) {
       throw new Error(`Erreur sauvegarde transaction: ${updateResponse.status}`)
     }
 
-    console.log(`📝 Transaction enregistrée:`, transaction)
+    console.log(` Transaction enregistrée:`, transaction)
   } catch (error) {
-    console.error("❌ Erreur enregistrement transaction:", error)
+    console.error(" Erreur enregistrement transaction:", error)
   }
 }
 
@@ -471,7 +471,7 @@ export function createStoryModal(onStoryCreated) {
     if (length > 200) {
       e.target.value = e.target.value.substring(0, 200)
       textCounter.textContent = "200/200 caractères"
-      showToast("⚠️ Maximum 200 caractères autorisés", "warning")
+      showToast(" Maximum 200 caractères autorisés", "warning")
     }
 
     if (length > 180) {
@@ -490,7 +490,7 @@ export function createStoryModal(onStoryCreated) {
     if (length > 100) {
       e.target.value = e.target.value.substring(0, 100)
       captionCounter.textContent = "100/100 caractères"
-      showToast("⚠️ Maximum 100 caractères autorisés pour la légende", "warning")
+      showToast(" Maximum 100 caractères autorisés pour la légende", "warning")
     }
 
     if (length > 80) {
@@ -540,13 +540,13 @@ export function createStoryModal(onStoryCreated) {
     if (file) {
       // Validation de l'image
       if (!file.type.startsWith("image/")) {
-        showToast("❌ Veuillez sélectionner un fichier image valide", "error")
+        showToast(" Veuillez sélectionner un fichier image valide", "error")
         return
       }
 
       if (file.size > 5 * 1024 * 1024) {
         // 5MB
-        showToast("❌ L'image ne doit pas dépasser 5MB", "error")
+        showToast(" L'image ne doit pas dépasser 5MB", "error")
         return
       }
 
@@ -556,7 +556,7 @@ export function createStoryModal(onStoryCreated) {
         previewImg.src = selectedImage
         imagePreview.classList.remove("hidden")
         selectImageBtn.classList.add("hidden")
-        showToast("✅ Image sélectionnée avec succès", "success")
+        showToast(" Image sélectionnée avec succès", "success")
       }
       reader.readAsDataURL(file)
     }
@@ -566,7 +566,7 @@ export function createStoryModal(onStoryCreated) {
   publishBtn.addEventListener("click", async () => {
     const currentUser = JSON.parse(localStorage.getItem("currentUser"))
     if (!currentUser) {
-      showToast("❌ Erreur: utilisateur non connecté", "error")
+      showToast(" Erreur: utilisateur non connecté", "error")
       return
     }
 
@@ -713,7 +713,7 @@ export function createStoryViewer(stories, initialIndex = 0) {
         likeBtn.style.transform = "scale(1.1)"
       }, 200)
 
-      console.log(`🔄 Clic sur like pour story ${currentStory.id}`)
+      console.log(` Clic sur like pour story ${currentStory.id}`)
 
       const updatedStory = await likeStory(currentStory.id, currentUser.id)
       if (updatedStory) {
@@ -723,7 +723,7 @@ export function createStoryViewer(stories, initialIndex = 0) {
         updateMonetizationDisplay()
       }
     } else {
-      showToast("❌ Connectez-vous pour liker les stories", "error")
+      showToast(" Connectez-vous pour liker les stories", "error")
     }
   })
 
@@ -763,7 +763,7 @@ export function createStoryViewer(stories, initialIndex = 0) {
     likeBtn.className = `like-button flex items-center space-x-2 transition-all duration-200 transform hover:scale-110 ${isLiked ? "text-red-500 scale-110" : "text-white hover:text-red-300"}`
     likeBtn.querySelector("span").textContent = currentStory.likes.length
 
-    console.log(`💖 Bouton like mis à jour: ${currentStory.likes.length} likes, isLiked: ${isLiked}`)
+    console.log(` Bouton like mis à jour: ${currentStory.likes.length} likes, isLiked: ${isLiked}`)
   }
 
   function updateMonetizationDisplay() {

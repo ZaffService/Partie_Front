@@ -1,21 +1,20 @@
 {
-  "name": "my-v0-project",
-  "version": "0.1.0",
-  "private": true,
+  "name": "whatsapp-web-clone",
+  "version": "1.0.0",
+  "description": "Clone de WhatsApp Web avec fonctionnalités avancées",
+  "main": "index.js",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "server": "json-server --watch db.json --port 5001 --middlewares ./server.cjs"
+    "start": "vite preview"
   },
-  "dependencies": {
-    "json-server": "^0.17.4"
-  },
+  "dependencies": {},
   "devDependencies": {
-    "vite": "^5.0.0",
-    "autoprefixer": "^10.4.16",
-    "postcss": "^8.4.31",
-    "tailwindcss": "^3.3.5"
-  }
+    "vite": "^5.0.0"
+  },
+  "keywords": ["whatsapp", "clone", "chat", "messaging", "stories", "calls"],
+  "author": "TESTER",
+  "license": "MIT"
 }

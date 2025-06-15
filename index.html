@@ -3,10 +3,10 @@
 <head>  
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>WhatsApp Web Clone</title>
-    <link rel="stylesheet" href="/src/style.css" />
+    <title>Sama WhatsApp </title>
+    <link rel="stylesheet" href="./src/style.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <link rel="icon" href="BIG_DEAL/images/taf.ico" type="image/x-icon">
+    <link rel="icon" href="./BIG_DEAL/images/taf.ico" type="image/x-icon">
 </head>
 <body class="bg-gray-900 text-white overflow-hidden">
     <!-- Conteneur de connexion -->
@@ -45,7 +45,7 @@
                 <!-- Avatar utilisateur -->
                 <div class="user-avatar mt-4" id="userAvatarButton">
                     <div class="w-10 h-10 rounded-full overflow-hidden cursor-pointer">
-                        <img src="/placeholder.svg?height=40&width=40" alt="Avatar" class="w-full h-full object-cover">
+                        <img src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=40&h=40&fit=crop&crop=face" alt="Avatar" class="w-full h-full object-cover">
                     </div>
                 </div>
             </div>
@@ -129,7 +129,7 @@
                 <!-- Profile Picture -->
                 <div class="flex justify-center mb-8">
                     <div class="w-48 h-48 rounded-full overflow-hidden">
-                        <img id="profileImage" src="/placeholder.svg?height=192&width=192" alt="Profile" class="w-full h-full object-cover">
+                        <img id="profileImage" src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=192&h=192&fit=crop&crop=face" alt="Profile" class="w-full h-full object-cover">
                     </div>
                 </div>
 
@@ -236,7 +236,7 @@
                         <i class="fas fa-microphone text-xl"></i>
                     </button>
                     <button id="sendButton" class="bg-green-500 hover:bg-green-600 size-10 rounded-full text-white flex justify-center items-center transition-colors">
-                     <i class="fa-solid fa-play tex-lg"></i>
+                        <i class="fas fa-paper-plane text-sm"></i>
                     </button>
                 </div>
             </div>
@@ -248,7 +248,7 @@
         <div class="bg-[#202c33] rounded-lg p-8 max-w-md w-full mx-4">
             <div class="text-center">
                 <div id="callAvatar" class="w-32 h-32 rounded-full mx-auto mb-4 overflow-hidden">
-                    <img src="/placeholder.svg?height=128&width=128" alt="Contact" class="w-full h-full object-cover">
+                    <img src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=128&h=128&fit=crop&crop=face" alt="Contact" class="w-full h-full object-cover">
                 </div>
                 <h3 id="callName" class="text-white text-xl font-medium mb-2">Nom du contact</h3>
                 <p id="callStatus" class="text-gray-400 mb-6">Appel en cours...</p>
@@ -286,6 +286,6 @@
     <!-- File Input (hidden) -->
     <input type="file" id="fileInput" class="hidden" accept="image/*,video/*,audio/*,.pdf,.doc,.docx">
 
-    <script type="module" src="src/script.js"></script>
+    <script type="module" src="./src/script.js"></script>
 </body>
 </html>

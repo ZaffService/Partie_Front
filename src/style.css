@@ -376,8 +376,8 @@
 #callModal {
   backdrop-filter: blur(10px);
 }
-\
-#callModal .bg-\[#202c33\] {
+
+#callModal .bg-[#202c33] {
   border: 1px solid #374151;
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
 }
@@ -633,11 +633,7 @@ button:disabled:hover {
 
 .voice-waveform {
   @apply relative flex-1 h-8;
-  background: linear-gradient(
-    to bottom,
-    rgba(255,255,255,0.2) 50%,
-    rgba(255,255,255,0.1) 50%
-  );
+  background: linear-gradient(to bottom, rgba(255, 255, 255, 0.2) 50%, rgba(255, 255, 255, 0.1) 50%);
   background-size: 100% 4px;
   background-repeat: repeat-y;
 }

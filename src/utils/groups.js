@@ -1,6 +1,6 @@
 import { showToast } from "./notifications.js"
 
-const API_URL = "http://localhost:5001"
+const API_URL = "https://mon-serveur-cub8.onrender.com"
 
 export async function createGroup(name, description, members, creatorId) {
   try {

@@ -240,11 +240,11 @@ export async function sendMessageToGroup(senderId, groupId, message) {
 // FONCTION CORRIGÉE pour la distribution des messages
 async function distributeGroupMessageToMembers(group, message, senderId, sender) {
   try {
-    console.log("📨 === DÉBUT DISTRIBUTION DÉTAILLÉE ===")
+    console.log("📨 === DÉBUT DISTRIBUTION MESSAGES GROUPE ===")
     console.log("Groupe:", group.name)
-    console.log("Membres du groupe:", group.members)
-    console.log("Message à distribuer:", message.text)
-    console.log("Expéditeur:", sender.name, "(ID:", senderId, ")")
+    console.log("Membres:", group.members)
+    console.log("Message:", message.text)
+    console.log("Expéditeur:", sender.name)
 
     // Récupérer tous les chats existants
     const chatsResponse = await fetch(`${API_URL}/chats`)
@@ -254,44 +254,24 @@ async function distributeGroupMessageToMembers(group, message, senderId, sender)
     }
 
     const allChats = await chatsResponse.json()
-    console.log("📋 Total chats dans la base:", allChats.length)
 
-    // Récupérer tous les utilisateurs pour avoir leurs infos
-    const usersResponse = await fetch(`${API_URL}/users`)
-    if (!usersResponse.ok) {
-      console.error("❌ Erreur récupération utilisateurs")
-      return
-    }
-
-    const allUsers = await usersResponse.json()
-
-    // Pour chaque membre du groupe (sauf l'expéditeur)
+    // Pour chaque membre du groupe (SAUF l'expéditeur)
     for (const memberId of group.members) {
       if (memberId === senderId) {
-        console.log(`⏭️ Ignorer l'expéditeur ${memberId} (${sender.name})`)
+        console.log(`⏭️ Ignorer expéditeur ${memberId}`)
         continue
       }
 
       try {
-        console.log(`\n📤 === DISTRIBUTION VERS MEMBRE ${memberId} ===`)
-
-        // Trouver les infos du membre
-        const member = allUsers.find((u) => u.id === memberId)
-        if (!member) {
-          console.error(`❌ Membre ${memberId} non trouvé dans les utilisateurs`)
-          continue
-        }
-
-        console.log(`👤 Membre cible: ${member.name}`)
+        console.log(`\n📤 Distribution vers membre ${memberId}`)
 
         // Trouver le chat personnel de ce membre avec l'expéditeur
         let memberChat = allChats.find((chat) => chat.ownerId === memberId && chat.contactId === senderId)
 
         if (!memberChat) {
-          console.log(`📝 Aucun chat existant entre ${member.name} et ${sender.name}`)
-          console.log(`📝 Création d'un nouveau chat...`)
+          console.log(`📝 Création nouveau chat pour membre ${memberId}`)
 
-          // Créer un chat personnel s'il n'existe pas
+          // Créer un nouveau chat personnel
           memberChat = {
             id: `${memberId}_${senderId}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
             ownerId: memberId,
@@ -317,28 +297,24 @@ async function distributeGroupMessageToMembers(group, message, senderId, sender)
           })
 
           if (!createResponse.ok) {
-            console.error(`❌ Erreur création chat pour ${member.name}`)
+            console.error(`❌ Erreur création chat pour membre ${memberId}`)
             continue
           }
 
-          console.log(`✅ Nouveau chat créé pour ${member.name}`)
-        } else {
-          console.log(`📋 Chat existant trouvé: ${memberChat.id}`)
+          console.log(`✅ Chat créé pour membre ${memberId}`)
         }
 
-        // Créer le message personnel avec le format [GROUPE] Nom: Message
+        // Créer le message personnel avec format [GROUPE]
         const personalMessage = {
           ...message,
-          id: `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`, // ID unique
+          id: `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
           text: `[${group.name}] ${sender.name}: ${message.text}`,
-          sent: false, // C'est un message reçu pour ce membre
+          sent: false, // Message reçu pour ce membre
           isGroupMessage: true,
           originalGroupId: group.id,
           originalGroupName: group.name,
           originalSender: sender.name,
         }
-
-        console.log("💬 Message personnel créé:", personalMessage.text)
 
         // Ajouter le message au chat
         memberChat.messages = memberChat.messages || []
@@ -347,12 +323,7 @@ async function distributeGroupMessageToMembers(group, message, senderId, sender)
         memberChat.lastMessageTime = personalMessage.timestamp
         memberChat.unread = (memberChat.unread || 0) + 1
 
-        console.log(`📊 Chat mis à jour:`)
-        console.log(`   - Messages: ${memberChat.messages.length}`)
-        console.log(`   - Non lus: ${memberChat.unread}`)
-        console.log(`   - Dernier message: ${memberChat.lastMessage}`)
-
-        // Mettre à jour le chat sur le serveur
+        // Sauvegarder le chat mis à jour
         const updateResponse = await fetch(`${API_URL}/chats/${memberChat.id}`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
@@ -360,17 +331,16 @@ async function distributeGroupMessageToMembers(group, message, senderId, sender)
         })
 
         if (updateResponse.ok) {
-          console.log(`✅ Message distribué avec succès à ${member.name}`)
+          console.log(`✅ Message distribué à membre ${memberId}`)
         } else {
-          console.error(`❌ Erreur mise à jour chat pour ${member.name}`)
-          console.error(`   Status: ${updateResponse.status}`)
+          console.error(`❌ Erreur mise à jour chat membre ${memberId}`)
         }
       } catch (error) {
-        console.error(`❌ Erreur distribution au membre ${memberId}:`, error)
+        console.error(`❌ Erreur distribution membre ${memberId}:`, error)
       }
     }
 
-    console.log("✅ === FIN DISTRIBUTION DÉTAILLÉE ===")
+    console.log("✅ === FIN DISTRIBUTION MESSAGES GROUPE ===")
   } catch (error) {
     console.error("❌ Erreur distribution générale:", error)
   }

@@ -107,9 +107,15 @@ async function sendSimpleVoiceMessage(audioBlob, duration) {
   try {
     const currentUser = getCurrentUser()
     const currentChat = window.currentChat
+    const currentGroup = window.currentGroup
 
-    if (!currentUser || !currentChat) {
-      showSimpleToast("Erreur: utilisateur ou chat non défini", "error")
+    if (!currentUser) {
+      showSimpleToast("Erreur: utilisateur non connecté", "error")
+      return
+    }
+
+    if (!currentChat && !currentGroup) {
+      showSimpleToast("Erreur: aucune conversation sélectionnée", "error")
       return
     }
 
@@ -119,9 +125,9 @@ async function sendSimpleVoiceMessage(audioBlob, duration) {
     const base64Audio = await blobToBase64(audioBlob)
 
     const message = {
-      id: Date.now(),
+      id: `voice_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       senderId: currentUser.id,
-      receiverId: currentChat.contactId,
+      receiverId: currentGroup ? currentGroup.id : currentChat.contactId,
       text: "🎤 Message vocal",
       sent: true,
       time: new Date().toLocaleTimeString("fr-FR", {
@@ -143,9 +149,15 @@ async function sendSimpleVoiceMessage(audioBlob, duration) {
       messagesArea.scrollTop = messagesArea.scrollHeight
     }
 
-    // Envoyer au serveur (utiliser la fonction existante)
-    if (window.handleSendMessage) {
-      await window.handleSendMessage(currentUser.id, currentChat.contactId, message)
+    // Envoyer au serveur
+    if (currentGroup) {
+      // Message de groupe
+      const { sendMessageToGroup } = await import("./groups.js")
+      await sendMessageToGroup(currentUser.id, currentGroup.id, message)
+    } else {
+      // Message personnel
+      const { handleSendMessage } = await import("./chat-handler.js")
+      await handleSendMessage(currentUser.id, currentChat.contactId, message)
     }
 
     showSimpleToast("✅ Message vocal envoyé", "success")
@@ -161,27 +173,137 @@ function createVoiceMessageElement(message) {
 
   const messageDiv = document.createElement("div")
   messageDiv.className = `flex mb-4 ${isSentByMe ? "justify-end" : "justify-start"}`
+  messageDiv.dataset.messageId = message.id
 
+  // Design WhatsApp pour message vocal
   messageDiv.innerHTML = `
-    <div class="max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
+    <div class="max-w-xs lg:max-w-md px-3 py-2 rounded-lg ${
       isSentByMe ? "bg-[#005c4b] text-white" : "bg-[#202c33] text-white"
     } shadow-md">
-      <div class="flex items-center space-x-2">
-        <button class="voice-play-btn w-8 h-8 rounded-full bg-green-500 flex items-center justify-center">
-          <i class="fas fa-play text-xs text-white"></i>
+      <div class="flex items-center space-x-3">
+        <!-- Avatar pour messages reçus -->
+        ${
+          !isSentByMe
+            ? `
+          <div class="w-8 h-8 rounded-full overflow-hidden flex-shrink-0">
+            <img src="${currentUser.avatar}" alt="Avatar" class="w-full h-full object-cover">
+          </div>
+        `
+            : ""
+        }
+        
+        <!-- Bouton play/pause -->
+        <button class="voice-play-btn w-10 h-10 rounded-full bg-white bg-opacity-20 hover:bg-opacity-30 flex items-center justify-center transition-all" 
+                data-message-id="${message.id}" 
+                data-audio-data="${message.fileData}">
+          <i class="fas fa-play text-sm"></i>
         </button>
-        <div class="flex-1">
-          <div class="text-sm">🎤 Message vocal</div>
-          <div class="text-xs text-gray-300">${message.duration}s</div>
+        
+        <!-- Forme d'onde et durée -->
+        <div class="flex-1 min-w-0">
+          <!-- Forme d'onde stylisée -->
+          <div class="flex items-center space-x-1 mb-1">
+            ${Array.from({ length: 20 }, (_, i) => {
+              const height = Math.random() * 16 + 4 // Hauteur aléatoire entre 4 et 20px
+              return `<div class="bg-white bg-opacity-60 rounded-full" style="width: 2px; height: ${height}px;"></div>`
+            }).join("")}
+          </div>
+          
+          <!-- Durée -->
+          <div class="text-xs text-gray-300">
+            <span class="voice-duration">${message.duration || 0}s</span>
+          </div>
         </div>
       </div>
-      <div class="flex justify-end items-center mt-1">
+      
+      <!-- Heure et statut -->
+      <div class="flex justify-end items-center mt-1 space-x-1">
         <span class="text-xs text-gray-300">${message.time}</span>
+        ${isSentByMe ? `<i class="fas fa-check-double text-xs ${message.status === "read" ? "text-blue-400" : "text-gray-400"}"></i>` : ""}
       </div>
     </div>
   `
 
+  // Ajouter l'événement de lecture
+  const playBtn = messageDiv.querySelector(".voice-play-btn")
+  if (playBtn) {
+    playBtn.addEventListener("click", () => playVoiceMessage(playBtn))
+  }
+
   return messageDiv
+}
+
+// Nouvelle fonction pour lire les messages vocaux
+function playVoiceMessage(button) {
+  const messageId = button.dataset.messageId
+  const audioData = button.dataset.audioData
+
+  if (!audioData) {
+    showSimpleToast("Données audio manquantes", "error")
+    return
+  }
+
+  try {
+    // Créer un élément audio
+    const audio = new Audio(audioData)
+    const icon = button.querySelector("i")
+    const durationSpan = button.closest(".max-w-xs, .max-w-md").querySelector(".voice-duration")
+
+    // État initial
+    let isPlaying = false
+    const currentTime = 0
+
+    audio.addEventListener("loadedmetadata", () => {
+      console.log("Audio chargé, durée:", audio.duration)
+    })
+
+    audio.addEventListener("timeupdate", () => {
+      if (durationSpan && audio.duration) {
+        const remaining = Math.ceil(audio.duration - audio.currentTime)
+        durationSpan.textContent = `${remaining}s`
+      }
+    })
+
+    audio.addEventListener("ended", () => {
+      icon.className = "fas fa-play text-sm"
+      if (durationSpan) {
+        const originalDuration = button
+          .closest(".max-w-xs, .max-w-md")
+          .querySelector("[data-message-id]")
+          .closest("[data-message-id]")
+        durationSpan.textContent = `${audio.duration ? Math.ceil(audio.duration) : 0}s`
+      }
+      isPlaying = false
+    })
+
+    audio.addEventListener("error", (e) => {
+      console.error("Erreur lecture audio:", e)
+      showSimpleToast("Erreur lecture audio", "error")
+      icon.className = "fas fa-play text-sm"
+      isPlaying = false
+    })
+
+    // Toggle play/pause
+    if (!isPlaying) {
+      audio
+        .play()
+        .then(() => {
+          icon.className = "fas fa-pause text-sm"
+          isPlaying = true
+        })
+        .catch((error) => {
+          console.error("Erreur démarrage audio:", error)
+          showSimpleToast("Impossible de lire l'audio", "error")
+        })
+    } else {
+      audio.pause()
+      icon.className = "fas fa-play text-sm"
+      isPlaying = false
+    }
+  } catch (error) {
+    console.error("Erreur création audio:", error)
+    showSimpleToast("Erreur lecture message vocal", "error")
+  }
 }
 
 function blobToBase64(blob) {

@@ -745,6 +745,40 @@ function createMessageElement(message) {
   let messageContent = ""
 
   switch (message.type) {
+    case "voice":
+      // Utiliser le même design que dans audio-recorder.js
+      messageContent = `
+        <div class="flex items-center space-x-3">
+          ${
+            !isSentByMe
+              ? `
+            <div class="w-8 h-8 rounded-full overflow-hidden flex-shrink-0">
+              <img src="${currentUser.avatar}" alt="Avatar" class="w-full h-full object-cover">
+            </div>
+          `
+              : ""
+          }
+          
+          <button class="voice-play-btn w-10 h-10 rounded-full bg-white bg-opacity-20 hover:bg-opacity-30 flex items-center justify-center transition-all" 
+                  data-message-id="${message.id}" 
+                  data-audio-data="${message.fileData}">
+            <i class="fas fa-play text-sm"></i>
+          </button>
+          
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center space-x-1 mb-1">
+              ${Array.from({ length: 20 }, (_, i) => {
+                const height = Math.random() * 16 + 4
+                return `<div class="bg-white bg-opacity-60 rounded-full" style="width: 2px; height: ${height}px;"></div>`
+              }).join("")}
+            </div>
+            <div class="text-xs text-gray-300">
+              <span class="voice-duration">${message.duration || 0}s</span>
+            </div>
+          </div>
+        </div>
+      `
+      break
     case "text":
     default:
       messageContent = `<p class="text-sm">${message.text}</p>`
@@ -763,7 +797,76 @@ function createMessageElement(message) {
     </div>
   `
 
+  // Ajouter l'événement de lecture pour les messages vocaux
+  if (message.type === "voice") {
+    const playBtn = messageDiv.querySelector(".voice-play-btn")
+    if (playBtn) {
+      playBtn.addEventListener("click", () => playVoiceMessage(playBtn))
+    }
+  }
+
   return messageDiv
+}
+
+// Ajouter la fonction de lecture des messages vocaux
+function playVoiceMessage(button) {
+  const messageId = button.dataset.messageId
+  const audioData = button.dataset.audioData
+
+  if (!audioData) {
+    showToast("Données audio manquantes", "error")
+    return
+  }
+
+  try {
+    const audio = new Audio(audioData)
+    const icon = button.querySelector("i")
+    const durationSpan = button.closest(".max-w-xs, .max-w-md").querySelector(".voice-duration")
+
+    let isPlaying = false
+
+    audio.addEventListener("timeupdate", () => {
+      if (durationSpan && audio.duration) {
+        const remaining = Math.ceil(audio.duration - audio.currentTime)
+        durationSpan.textContent = `${remaining}s`
+      }
+    })
+
+    audio.addEventListener("ended", () => {
+      icon.className = "fas fa-play text-sm"
+      if (durationSpan && audio.duration) {
+        durationSpan.textContent = `${Math.ceil(audio.duration)}s`
+      }
+      isPlaying = false
+    })
+
+    audio.addEventListener("error", (e) => {
+      console.error("Erreur lecture audio:", e)
+      showToast("Erreur lecture audio", "error")
+      icon.className = "fas fa-play text-sm"
+      isPlaying = false
+    })
+
+    if (!isPlaying) {
+      audio
+        .play()
+        .then(() => {
+          icon.className = "fas fa-pause text-sm"
+          isPlaying = true
+        })
+        .catch((error) => {
+          console.error("Erreur démarrage audio:", error)
+          showToast("Impossible de lire l'audio", "error")
+        })
+    } else {
+      audio.pause()
+      icon.className = "fas fa-play text-sm"
+      isPlaying = false
+    }
+  } catch (error) {
+    console.error("Erreur création audio:", error)
+    showToast("Erreur lecture message vocal", "error")
+  }
 }
 
 function showMessageInput() {

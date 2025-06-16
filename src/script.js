@@ -8,21 +8,21 @@ import { getStories, createStoryModal, createStoryViewer } from "./utils/stories
 
 let chats = []
 let currentChat = null
-let currentGroup = null // Nouveau: pour gérer les groupes
+let currentGroup = null
 let currentView = "chats"
 let isNavigating = false
 let isSending = false
 
-// Ajouter cette ligne après la déclaration des variables globales
-window.showSimpleGroups = null // Sera définie plus tard
-
 // Variables globales pour l'application
 window.currentChat = null
 window.currentGroup = null
+window.showSimpleGroups = null
 
 document.addEventListener("DOMContentLoaded", () => {
   console.log(" WhatsApp Web démarré")
   initApp()
+  // Initialiser les groupes après le chargement
+  setTimeout(initializeSimpleGroups, 1000)
 })
 
 async function initApp() {
@@ -32,10 +32,10 @@ async function initApp() {
   const currentUser = getCurrentUser()
 
   if (!currentUser) {
-    console.log(" Aucun utilisateur connecté")
+    console.log("❌ Aucun utilisateur connecté")
     showLoginForm()
   } else {
-    console.log(" Utilisateur connecté:", currentUser.name)
+    console.log("✅ Utilisateur connecté:", currentUser.name)
     showMainApp()
   }
 
@@ -45,7 +45,7 @@ async function initApp() {
     loginContainer.innerHTML = ""
 
     const loginForm = createLoginForm((user) => {
-      console.log(" Connexion réussie pour:", user.name)
+      console.log("✅ Connexion réussie pour:", user.name)
       showMainApp()
     })
 
@@ -61,39 +61,28 @@ async function initApp() {
 
 async function initMainInterface() {
   try {
-    console.log(" Initialisation de l'interface...")
+    console.log("🔧 Initialisation de l'interface...")
 
-    // Charger les chats
     await loadChats()
-
-    // Configurer les événements
     setupEventListeners()
-
-    // Mettre à jour l'avatar utilisateur
     updateUserAvatar()
-
-    // Afficher le message de bienvenue
     showWelcomeMessage()
 
-    // Initialiser la synchronisation temps réel
     initializeRealTimeSync(
       (message, chat) => {
-        console.log(" Nouveau message reçu:", message)
+        console.log("📨 Nouveau message reçu:", message)
         handleNewMessage(message, chat)
       },
       (userId, isOnline) => {
-        console.log(` Statut utilisateur ${userId}:`, isOnline ? "en ligne" : "hors ligne")
+        console.log(`👤 Statut utilisateur ${userId}:`, isOnline ? "en ligne" : "hors ligne")
         updateUserStatus(userId, isOnline)
       },
     )
 
-    // Démarrer le rafraîchissement automatique
     startAutoRefresh()
-
-    // Demander les permissions de notification
     await requestNotificationPermission()
 
-    console.log(" Interface principale initialisée")
+    console.log("✅ Interface principale initialisée")
   } catch (error) {
     console.error(" Erreur initialisation:", error)
     showToast("Erreur de chargement", "error")
@@ -102,35 +91,32 @@ async function initMainInterface() {
 
 async function loadChats() {
   try {
-    console.log(" Chargement des chats...")
+    console.log("📂 Chargement des chats...")
     chats = await getChats()
-    console.log(`${chats.length} chats chargés`)
+    console.log(`📊 ${chats.length} chats chargés`)
 
     if (currentView === "chats") {
       renderChatList()
     }
 
-    // Si un chat est ouvert, recharger ses messages
     if (currentChat) {
       const messages = await getMessages(currentChat.id)
       renderMessages(messages)
     }
   } catch (error) {
-    console.error(" Erreur chargement chats:", error)
+    console.error("❌ Erreur chargement chats:", error)
     showToast("Impossible de charger les conversations", "error")
   }
 }
 
 function setupEventListeners() {
-  console.log(" Configuration des événements...")
+  console.log("🔧 Configuration des événements...")
 
-  // Avatar utilisateur
   const userAvatarButton = document.getElementById("userAvatarButton")
   if (userAvatarButton) {
     userAvatarButton.addEventListener("click", showProfile)
   }
 
-  // Boutons de profil
   const backToChats = document.getElementById("backToChats")
   if (backToChats) {
     backToChats.addEventListener("click", hideProfile)
@@ -141,20 +127,17 @@ function setupEventListeners() {
     logoutButton.addEventListener("click", logout)
   }
 
-  // Bouton retour mobile
   const backButton = document.getElementById("backButton")
   if (backButton) {
     backButton.addEventListener("click", handleBackButton)
   }
 
-  // Configuration des autres composants
   setupMessageInput()
   setupNavigation()
   setupSearch()
   setupFilterTabs()
   setupNewChatButton()
 
-  // Responsive
   window.addEventListener("resize", handleResize)
 }
 
@@ -164,12 +147,12 @@ function setupNewChatButton() {
     newChatBtn.addEventListener("click", () => {
       const currentUser = getCurrentUser()
       if (!currentUser) {
-        showToast(" Erreur: utilisateur non connecté", "error")
+        showToast("❌ Erreur: utilisateur non connecté", "error")
         return
       }
 
       createAddContactModal(async (contact) => {
-        console.log(" Contact ajouté:", contact.name)
+        console.log("✅ Contact ajouté:", contact.name)
         await loadChats()
         showToast(`${contact.name} ajouté avec succès`, "success")
       })
@@ -191,24 +174,38 @@ function setupFilterTabs() {
   const filterTabs = document.querySelectorAll(".filter-tab")
   filterTabs.forEach((tab) => {
     tab.addEventListener("click", () => {
-      // Retirer la classe active de tous les onglets
+      // Réinitialiser tous les onglets
       filterTabs.forEach((t) => {
         t.classList.remove("active", "bg-green-600", "text-white")
         t.classList.add("text-gray-400")
       })
 
-      // Ajouter la classe active à l'onglet cliqué
+      // Activer l'onglet cliqué
       tab.classList.add("active", "bg-green-600", "text-white")
       tab.classList.remove("text-gray-400")
 
       const filter = tab.dataset.filter
+      const text = tab.textContent.trim().toLowerCase()
 
-      // Si c'est l'onglet "Tous", revenir à la vue chats normale
-      if (filter === "all" || !filter) {
-        currentView = "chats"
-        renderChatList()
+      // Vérifier si c'est l'onglet groupes
+      if (text.includes("groupe") || text.includes("group")) {
+        console.log("📱 Clic sur onglet Groupes")
+        currentView = "groups"
+        showSimpleGroups()
       } else {
-        applyFilter(filter)
+        // Pour tous les autres onglets, revenir aux chats normaux
+        console.log("💬 Retour aux chats normaux")
+        currentView = "chats"
+
+        // IMPORTANT: Réinitialiser les variables de groupe
+        currentGroup = null
+        window.currentGroup = null
+
+        if (filter === "all" || !filter) {
+          renderChatList()
+        } else {
+          applyFilter(filter)
+        }
       }
     })
   })
@@ -222,7 +219,7 @@ function setupNavigation() {
       e.stopPropagation()
 
       const view = item.dataset.view
-      console.log(" Navigation vers:", view)
+      console.log("🧭 Navigation vers:", view)
 
       if (isNavigating || currentView === view) {
         return
@@ -233,7 +230,6 @@ function setupNavigation() {
       try {
         currentView = view
 
-        // Mettre à jour l'état visuel de la navigation
         navItems.forEach((nav) => nav.classList.remove("active"))
         item.classList.add("active")
 
@@ -245,16 +241,16 @@ function setupNavigation() {
             await showStoriesView()
             break
           case "communities":
-            showToast(" Groupes - Fonctionnalité en développement", "info")
+            showToast("📱 Groupes - Fonctionnalité en développement", "info")
             break
           case "settings":
             showSettingsView()
             break
         }
 
-        console.log("Navigation terminée vers:", view)
+        console.log("✅ Navigation terminée vers:", view)
       } catch (error) {
-        console.error(" Erreur navigation:", error)
+        console.error("❌ Erreur navigation:", error)
         currentView = "chats"
         await showChatsView()
       } finally {
@@ -267,18 +263,22 @@ function setupNavigation() {
 }
 
 async function showChatsView() {
-  console.log(" Affichage vue chats")
+  console.log("💬 Affichage vue chats")
   const sidebar = document.getElementById("sidebar")
   const profilePanel = document.getElementById("profilePanel")
 
   profilePanel.style.display = "none"
   sidebar.style.display = "flex"
 
+  // IMPORTANT: Réinitialiser les variables de groupe
+  currentGroup = null
+  window.currentGroup = null
+
   await loadChats()
 }
 
 async function showStoriesView() {
-  console.log(" Affichage vue stories")
+  console.log("📸 Affichage vue stories")
   const sidebar = document.getElementById("sidebar")
   const profilePanel = document.getElementById("profilePanel")
 
@@ -289,7 +289,7 @@ async function showStoriesView() {
 }
 
 function showSettingsView() {
-  console.log(" Affichage vue paramètres")
+  console.log("⚙️ Affichage vue paramètres")
   const sidebar = document.getElementById("sidebar")
   const profilePanel = document.getElementById("profilePanel")
 
@@ -377,7 +377,7 @@ async function createStoriesInterface() {
       })
     })
   } catch (error) {
-    console.error("Erreur chargement stories:", error)
+    console.error("❌ Erreur chargement stories:", error)
     chatList.innerHTML = `
       <div class="text-center py-8 text-red-400">
         <i class="fas fa-exclamation-triangle text-4xl mb-4"></i>
@@ -450,7 +450,7 @@ function createSettingsInterface() {
         showToast(`${result.chatsCreated} chats créés !`, "success")
         await loadChats()
       } catch (error) {
-        console.error(" Erreur initialisation:", error)
+        console.error("❌ Erreur initialisation:", error)
         showToast(" Erreur lors de l'initialisation", "error")
       }
     })
@@ -459,7 +459,7 @@ function createSettingsInterface() {
   const refreshBtn = document.getElementById("refreshBtn")
   if (refreshBtn) {
     refreshBtn.addEventListener("click", async () => {
-      showToast(" Actualisation...", "info")
+      showToast("Actualisation...", "info")
       await loadChats()
       forceSyncNow()
       showToast(" Actualisé !", "success")
@@ -525,7 +525,7 @@ function renderChatList() {
   const currentUser = getCurrentUser()
   if (!currentUser) return
 
-  console.log(` Rendu de ${chats.length} chats pour ${currentUser.name}`)
+  console.log(`📊 Rendu de ${chats.length} chats pour ${currentUser.name}`)
 
   chatList.innerHTML = ""
 
@@ -554,7 +554,6 @@ function renderChatList() {
     return
   }
 
-  // Trier par dernière activité
   const sortedChats = [...chats].sort((a, b) => {
     const timeA = new Date(a.lastMessageTime || a.time)
     const timeB = new Date(b.lastMessageTime || b.time)
@@ -597,40 +596,55 @@ function createChatItem(chat) {
     </div>
   `
 
-  chatItem.addEventListener("click", () => openChat(chat.id))
+  // CORRECTION IMPORTANTE: S'assurer qu'on ouvre bien un CHAT et pas un groupe
+  chatItem.addEventListener("click", () => {
+    console.log("🔘 Clic sur chat:", chat.name, "ID:", chat.id)
+
+    // Réinitialiser les variables de groupe
+    currentGroup = null
+    window.currentGroup = null
+
+    // Ouvrir le chat personnel
+    openChat(chat.id)
+  })
 
   return chatItem
 }
 
 async function openChat(chatId) {
   try {
-    console.log(" Ouverture chat:", chatId)
+    console.log("💬 === OUVERTURE CHAT PERSONNEL ===")
+    console.log("Chat ID:", chatId)
 
     hideProfile()
 
+    // IMPORTANT: Réinitialiser les variables de groupe
+    currentGroup = null
+    window.currentGroup = null
+
+    // Trouver le chat dans la liste des chats PERSONNELS
     currentChat = chats.find((chat) => chat.id === chatId)
     window.currentChat = currentChat
 
     if (!currentChat) {
-      console.error(" Chat non trouvé:", chatId)
+      console.error("❌ Chat non trouvé:", chatId)
+      showToast("Chat non trouvé", "error")
       return
     }
 
-    console.log("Chat ouvert:", currentChat.name)
+    console.log("✅ Chat personnel ouvert:", currentChat.name)
+    console.log("Contact ID:", currentChat.contactId)
 
-    // Marquer comme lu
     if (currentChat.unread > 0) {
       currentChat.unread = 0
       await updateChat(currentChat.id, { unread: 0 })
     }
 
-    // Mise à jour visuelle
     document.querySelectorAll(".chat-item").forEach((item) => {
       item.classList.remove("bg-[#202c33]")
     })
     document.querySelector(`[data-chat-id="${chatId}"]`)?.classList.add("bg-[#202c33]")
 
-    // Responsive
     if (isMobile()) {
       document.getElementById("sidebar").style.display = "none"
       document.getElementById("chatArea").style.display = "flex"
@@ -642,12 +656,11 @@ async function openChat(chatId) {
     await renderMessages()
     showMessageInput()
 
-    // Recharger la liste des chats pour mettre à jour les compteurs
     if (currentView === "chats") {
       renderChatList()
     }
   } catch (error) {
-    console.error(" Erreur ouverture chat:", error)
+    console.error("❌ Erreur ouverture chat:", error)
     showToast("Erreur lors de l'ouverture du chat", "error")
   }
 }
@@ -658,40 +671,68 @@ function showChatHeader() {
   const chatName = document.getElementById("chatName")
   const chatStatus = document.getElementById("chatStatus")
 
-  if (chatHeader && currentChat) {
+  if (chatHeader && (currentChat || currentGroup)) {
     chatHeader.style.display = "flex"
-    chatAvatar.innerHTML = `<img src="${currentChat.avatar}" alt="${currentChat.name}" class="w-10 h-10 rounded-full object-cover">`
-    chatName.textContent = currentChat.name
-    chatStatus.textContent = currentChat.isOnline ? "en ligne" : currentChat.status
 
-    // Ajouter les boutons d'appel
-    const callButtons = document.getElementById("callButtons")
-    if (callButtons) {
-      callButtons.innerHTML = `
-        <button id="audioCallBtn" class="p-2 text-gray-400 hover:text-white transition-colors">
-          <i class="fas fa-phone text-lg"></i>
-        </button>
-        <button id="videoCallBtn" class="p-2 text-gray-400 hover:text-white transition-colors">
-          <i class="fas fa-video text-lg"></i>
-        </button>
+    // Si c'est un groupe
+    if (currentGroup) {
+      console.log("📱 Affichage header GROUPE:", currentGroup.name)
+      chatAvatar.innerHTML = `
+        <div class="relative">
+          <img src="${currentGroup.avatar || "https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=150&h=150&fit=crop"}" 
+               alt="${currentGroup.name}" class="w-10 h-10 rounded-full object-cover">
+          <div class="absolute -bottom-1 -right-1 w-3 h-3 bg-gray-600 rounded-full flex items-center justify-center">
+            <i class="fas fa-users text-xs text-white"></i>
+          </div>
+        </div>
       `
+      chatName.textContent = currentGroup.name
+      displayGroupMembersInHeader(currentGroup, chatStatus)
 
-      // Événements pour les appels
-      const audioCallBtn = document.getElementById("audioCallBtn")
-      const videoCallBtn = document.getElementById("videoCallBtn")
-
-      if (audioCallBtn) {
-        audioCallBtn.addEventListener("click", async () => {
-          const { initializeAudioCall } = await import("./utils/calls.js")
-          initializeAudioCall(currentChat)
-        })
+      // Bouton simple et direct pour les infos du groupe
+      const callButtons = document.getElementById("callButtons")
+      if (callButtons) {
+        callButtons.innerHTML = `
+          <button onclick="openGroupInfos()" class="px-3 py-1 bg-green-600 hover:bg-green-700 text-white rounded text-sm font-medium transition-colors">
+             Infos
+          </button>
+        `
       }
+    }
+    // Si c'est un chat normal
+    else if (currentChat) {
+      console.log("💬 Affichage header CHAT PERSONNEL:", currentChat.name)
+      chatAvatar.innerHTML = `<img src="${currentChat.avatar}" alt="${currentChat.name}" class="w-10 h-10 rounded-full object-cover">`
+      chatName.textContent = currentChat.name
+      chatStatus.textContent = currentChat.isOnline ? "en ligne" : currentChat.status
 
-      if (videoCallBtn) {
-        videoCallBtn.addEventListener("click", async () => {
-          const { startVideoCall } = await import("./utils/calls.js")
-          startVideoCall(currentChat)
-        })
+      const callButtons = document.getElementById("callButtons")
+      if (callButtons) {
+        callButtons.innerHTML = `
+          <button id="audioCallBtn" class="p-2 text-gray-400 hover:text-white transition-colors">
+            <i class="fas fa-phone text-lg"></i>
+          </button>
+          <button id="videoCallBtn" class="p-2 text-gray-400 hover:text-white transition-colors">
+            <i class="fas fa-video text-lg"></i>
+          </button>
+        `
+
+        const audioCallBtn = document.getElementById("audioCallBtn")
+        const videoCallBtn = document.getElementById("videoCallBtn")
+
+        if (audioCallBtn) {
+          audioCallBtn.addEventListener("click", async () => {
+            const { initializeAudioCall } = await import("./utils/calls.js")
+            initializeAudioCall(currentChat)
+          })
+        }
+
+        if (videoCallBtn) {
+          videoCallBtn.addEventListener("click", async () => {
+            const { startVideoCall } = await import("./utils/calls.js")
+            startVideoCall(currentChat)
+          })
+        }
       }
     }
   }
@@ -702,7 +743,7 @@ async function renderMessages() {
   if (!messagesArea || !currentChat) return
 
   try {
-    console.log(" Rendu des messages pour:", currentChat.name)
+    console.log("📨 Rendu des messages pour:", currentChat.name)
     const messages = await getMessages(currentChat.id)
     currentChat.messages = messages
 
@@ -727,7 +768,7 @@ async function renderMessages() {
     })
 
     messagesArea.scrollTop = messagesArea.scrollHeight
-    console.log(` ${messages.length} messages affichés`)
+    console.log(`✅ ${messages.length} messages affichés`)
   } catch (error) {
     console.error(" Erreur lors du rendu des messages:", error)
     showToast("Erreur lors du chargement des messages", "error")
@@ -746,7 +787,6 @@ function createMessageElement(message) {
 
   switch (message.type) {
     case "voice":
-      // Utiliser le même design que dans audio-recorder.js
       messageContent = `
         <div class="flex items-center space-x-3">
           ${
@@ -797,7 +837,6 @@ function createMessageElement(message) {
     </div>
   `
 
-  // Ajouter l'événement de lecture pour les messages vocaux
   if (message.type === "voice") {
     const playBtn = messageDiv.querySelector(".voice-play-btn")
     if (playBtn) {
@@ -808,7 +847,6 @@ function createMessageElement(message) {
   return messageDiv
 }
 
-// Ajouter la fonction de lecture des messages vocaux
 function playVoiceMessage(button) {
   const messageId = button.dataset.messageId
   const audioData = button.dataset.audioData
@@ -883,20 +921,17 @@ function setupMessageInput() {
 
   if (!messageText || !sendButton) return
 
-  // Gestion du bouton vocal
   if (voiceBtn) {
     let isRecording = false
 
     voiceBtn.addEventListener("click", async () => {
       if (!isRecording) {
-        // Démarrer l'enregistrement
         const { startVoiceRecording } = await import("./utils/audio-recorder.js")
         const success = await startVoiceRecording()
         if (success) {
           isRecording = true
         }
       } else {
-        // Arrêter l'enregistrement
         const { stopVoiceRecording } = await import("./utils/audio-recorder.js")
         stopVoiceRecording()
         isRecording = false
@@ -913,7 +948,6 @@ function setupMessageInput() {
     const text = messageText.value.trim()
     if (!text) return
 
-    // Vérifier si on est dans un chat normal ou un groupe
     if (!currentChat && !currentGroup) return
 
     try {
@@ -935,10 +969,8 @@ function setupMessageInput() {
         status: "sent",
       }
 
-      // Vider le champ de message immédiatement
       messageText.value = ""
 
-      // Affichage immédiat du message
       const messageElement = createMessageElement(message)
       const messagesArea = document.getElementById("messagesArea")
       if (messagesArea) {
@@ -946,14 +978,12 @@ function setupMessageInput() {
         messagesArea.scrollTop = messagesArea.scrollHeight
       }
 
-      // Envoyer au serveur
       if (currentGroup) {
         await sendGroupMessage(currentUser.id, currentGroup.id, message)
       } else {
         await handleSendMessage(currentUser.id, currentChat.contactId, message)
       }
 
-      // Mettre à jour la liste des chats
       if (currentView === "chats") {
         await loadChats()
       }
@@ -1080,12 +1110,10 @@ function isMobile() {
 }
 
 function startAutoRefresh() {
-  // Rafraîchir les chats toutes les 10 secondes SEULEMENT si on est sur la vue chats
   setInterval(async () => {
     if (currentView === "chats") {
       await loadChats()
     }
-    // NE PAS recharger si on est sur la vue groupes
   }, 10000)
 }
 
@@ -1093,7 +1121,6 @@ function handleNewMessage(message, chat) {
   const currentUser = getCurrentUser()
   if (!currentUser) return
 
-  // Si c'est le chat actuellement ouvert, ajouter le message
   if (currentChat && currentChat.id === chat.id) {
     const messageElement = createMessageElement(message)
     const messagesArea = document.getElementById("messagesArea")
@@ -1103,19 +1130,16 @@ function handleNewMessage(message, chat) {
     }
   }
 
-  // Recharger la liste des chats pour mettre à jour les compteurs
   if (currentView === "chats") {
     loadChats()
   }
 
-  // Afficher une notification
   if (message.senderId !== currentUser.id) {
     showToast(` Nouveau message de ${chat.name}`, "info")
   }
 }
 
 function updateUserStatus(userId, isOnline) {
-  // Mettre à jour le statut dans la liste des chats
   const chatItems = document.querySelectorAll(".chat-item")
   chatItems.forEach((item) => {
     const chat = chats.find((c) => c.id === item.dataset.chatId)
@@ -1131,7 +1155,6 @@ function updateUserStatus(userId, isOnline) {
     }
   })
 
-  // Mettre à jour le statut dans l'en-tête du chat actuel
   if (currentChat && currentChat.contactId === userId) {
     const chatStatus = document.getElementById("chatStatus")
     if (chatStatus) {
@@ -1156,26 +1179,23 @@ function formatStoryTime(timestamp) {
   }
 }
 
-// GESTION COMPLÈTE DES GROUPES
+// ===== GESTION COMPLÈTE DES GROUPES AVEC BOUTONS D'ACTION =====
+
 function initializeSimpleGroups() {
   console.log("🚀 Initialisation simple des groupes...")
 
-  // Attendre que le DOM soit prêt
   setTimeout(() => {
     const filterTabs = document.querySelectorAll(".filter-tab")
 
     filterTabs.forEach((tab, index) => {
       const text = tab.textContent.trim().toLowerCase()
 
-      // Si c'est l'onglet groupes (généralement le 4ème)
       if (text.includes("groupe") || text.includes("group") || index === 3) {
         console.log("📱 Onglet Groupes trouvé:", text)
 
-        // Supprimer les anciens événements
         const newTab = tab.cloneNode(true)
         tab.parentNode.replaceChild(newTab, tab)
 
-        // Ajouter le nouvel événement
         newTab.addEventListener("click", showSimpleGroups)
       }
     })
@@ -1183,24 +1203,11 @@ function initializeSimpleGroups() {
 }
 
 async function showSimpleGroups() {
-  console.log("📱 Affichage des groupes...")
-
-  // Exposer la fonction globalement pour le rechargement automatique
-  window.showSimpleGroups = showSimpleGroups
+  console.log("📱 Affichage des groupes avec boutons d'action...")
 
   const chatList = document.getElementById("chatList")
   if (!chatList) return
 
-  // Marquer l'onglet comme actif
-  document.querySelectorAll(".filter-tab").forEach((tab) => {
-    tab.classList.remove("active", "bg-green-600", "text-white")
-    tab.classList.add("text-gray-400")
-  })
-
-  event.target.classList.add("active", "bg-green-600", "text-white")
-  event.target.classList.remove("text-gray-400")
-
-  // IMPORTANT: Changer la vue actuelle pour éviter le retour automatique
   currentView = "groups"
 
   try {
@@ -1210,11 +1217,9 @@ async function showSimpleGroups() {
       return
     }
 
-    // Récupérer les groupes de l'utilisateur
     const { getUserGroups } = await import("./utils/groups.js")
     const userGroups = await getUserGroups(currentUser.id)
 
-    // Afficher l'interface des groupes
     chatList.innerHTML = `
       <div class="p-4">
         <button id="createGroupBtn" class="w-full p-4 bg-green-600 hover:bg-green-700 rounded-lg flex items-center space-x-3 mb-4 transition-colors">
@@ -1227,7 +1232,7 @@ async function showSimpleGroups() {
           </div>
         </button>
         
-        <div class="space-y-2">
+        <div class="space-y-3">
           ${
             userGroups.length === 0
               ? `
@@ -1244,9 +1249,10 @@ async function showSimpleGroups() {
               : userGroups
                   .map(
                     (group) => `
-            <div class="group-item p-4 hover:bg-[#2a3942] cursor-pointer border-b border-gray-800 transition-colors" data-group-id="${group.id}">
-              <div class="flex items-center space-x-3">
-                <div class="relative">
+            <div class="bg-[#202c33] rounded-lg p-4 hover:bg-[#2a3942] transition-colors">
+              <!-- En-tête du groupe -->
+              <div class="flex items-center space-x-3 mb-3">
+                <div class="relative cursor-pointer" onclick="openGroupChat('${group.id}')">
                   <img src="${group.avatar || "https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=150&h=150&fit=crop"}" 
                        alt="${group.name}" 
                        class="w-12 h-12 rounded-full object-cover">
@@ -1255,7 +1261,7 @@ async function showSimpleGroups() {
                   </div>
                 </div>
                 
-                <div class="flex-1 min-w-0">
+                <div class="flex-1 min-w-0 cursor-pointer" onclick="openGroupChat('${group.id}')">
                   <div class="flex items-center justify-between">
                     <h3 class="font-medium text-white truncate">${group.name}</h3>
                     <span class="text-xs text-gray-400">${formatTime(group.lastMessageTime)}</span>
@@ -1278,6 +1284,40 @@ async function showSimpleGroups() {
                   ${group.description ? `<p class="text-xs text-gray-500 mt-1 truncate">${group.description}</p>` : ""}
                 </div>
               </div>
+              
+              <!-- Boutons d'action -->
+              <div class="flex flex-wrap gap-2 pt-3 border-t border-gray-600">
+                <button onclick="openGroupChat('${group.id}')" 
+                        class="flex-1 min-w-0 px-3 py-2 bg-green-600 hover:bg-green-700 text-white rounded text-sm font-medium transition-colors">
+                   Ouvrir
+                </button>
+                
+                <button onclick="showGroupInfoQuick('${group.id}')" 
+                        class="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm font-medium transition-colors">
+                   Infos
+                </button>
+                
+                ${
+                  group.admins && group.admins.includes(currentUser.id)
+                    ? `
+                  <button onclick="showAddMemberQuick('${group.id}')" 
+                          class="px-3 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded text-sm font-medium transition-colors">
+                     Membre
+                  </button>
+                  
+                  <button onclick="showManageMembersQuick('${group.id}')" 
+                          class="px-3 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded text-sm font-medium transition-colors">
+                     Gérer
+                  </button>
+                `
+                    : ""
+                }
+                
+                <button onclick="leaveGroupQuick('${group.id}')" 
+                        class="px-3 py-2 bg-red-600 hover:bg-red-700 text-white rounded text-sm font-medium transition-colors">
+                   Quitter
+                </button>
+              </div>
             </div>
           `,
                   )
@@ -1287,7 +1327,6 @@ async function showSimpleGroups() {
       </div>
     `
 
-    // Événement pour créer un groupe (UTILISER LE CODE EXISTANT)
     const createGroupBtn = document.getElementById("createGroupBtn")
     if (createGroupBtn) {
       createGroupBtn.addEventListener("click", async () => {
@@ -1296,7 +1335,7 @@ async function showSimpleGroups() {
           createGroupModal((newGroup) => {
             if (newGroup) {
               showToast(`Groupe "${newGroup.name}" créé avec succès`, "success")
-              // Le rechargement se fait automatiquement dans createGroup()
+              showSimpleGroups() // Recharger la liste
             }
           })
         } catch (error) {
@@ -1306,20 +1345,9 @@ async function showSimpleGroups() {
       })
     }
 
-    // Événements pour ouvrir les groupes
-    document.querySelectorAll(".group-item").forEach((item) => {
-      item.addEventListener("click", () => {
-        const groupId = item.dataset.groupId
-        const group = userGroups.find((g) => g.id === groupId)
-        if (group) {
-          openGroupChat(group)
-        }
-      })
-    })
-
-    console.log(`✅ ${userGroups.length} groupe(s) affiché(s)`)
+    console.log(`✅ ${userGroups.length} groupe(s) affiché(s) avec boutons d'action`)
   } catch (error) {
-    console.error("❌ Erreur affichage groupes:", error)
+    console.error(" Erreur affichage groupes:", error)
     chatList.innerHTML = `
       <div class="text-center py-8 text-red-400">
         <i class="fas fa-exclamation-triangle text-4xl mb-4"></i>
@@ -1332,19 +1360,280 @@ async function showSimpleGroups() {
   }
 }
 
-async function openGroupChat(group) {
+// Fonctions globales pour les boutons d'action des groupes
+window.openGroupChat = async (groupId) => {
   try {
-    console.log("💬 Ouverture du chat de groupe:", group.name)
+    console.log("💬 Ouverture groupe depuis bouton:", groupId)
 
-    // Fermer le chat normal s'il est ouvert
+    const { getUserGroups } = await import("./utils/groups.js")
+    const currentUser = getCurrentUser()
+    const userGroups = await getUserGroups(currentUser.id)
+    const group = userGroups.find((g) => g.id === groupId)
+
+    if (group) {
+      await openGroupChatDirect(group)
+    } else {
+      showToast("Groupe non trouvé", "error")
+    }
+  } catch (error) {
+    console.error("Erreur ouverture groupe:", error)
+    showToast("Erreur lors de l'ouverture du groupe", "error")
+  }
+}
+
+window.showGroupInfoQuick = async (groupId) => {
+  try {
+    console.log("📋 Infos groupe depuis bouton:", groupId)
+
+    const { getUserGroups, showGroupInfo } = await import("./utils/groups.js")
+    const currentUser = getCurrentUser()
+    const userGroups = await getUserGroups(currentUser.id)
+    const group = userGroups.find((g) => g.id === groupId)
+
+    if (group) {
+      showGroupInfo(group)
+    } else {
+      showToast("Groupe non trouvé", "error")
+    }
+  } catch (error) {
+    console.error("Erreur infos groupe:", error)
+    showToast("Erreur lors de l'affichage des infos", "error")
+  }
+}
+
+window.showAddMemberQuick = async (groupId) => {
+  try {
+    console.log("➕ Ajout membre depuis bouton:", groupId)
+
+    const { getUserGroups, showAddMemberModal } = await import("./utils/groups.js")
+    const currentUser = getCurrentUser()
+    const userGroups = await getUserGroups(currentUser.id)
+    const group = userGroups.find((g) => g.id === groupId)
+
+    if (group) {
+      showAddMemberModal(group)
+    } else {
+      showToast("Groupe non trouvé", "error")
+    }
+  } catch (error) {
+    console.error("Erreur ajout membre:", error)
+    showToast("Erreur lors de l'ajout de membre", "error")
+  }
+}
+
+window.showManageMembersQuick = async (groupId) => {
+  try {
+    console.log("👥 Gestion membres depuis bouton:", groupId)
+
+    const { getUserGroups } = await import("./utils/groups.js")
+    const currentUser = getCurrentUser()
+    const userGroups = await getUserGroups(currentUser.id)
+    const group = userGroups.find((g) => g.id === groupId)
+
+    if (group) {
+      showMembersManagementModal(group)
+    } else {
+      showToast("Groupe non trouvé", "error")
+    }
+  } catch (error) {
+    console.error("Erreur gestion membres:", error)
+    showToast("Erreur lors de la gestion des membres", "error")
+  }
+}
+
+window.leaveGroupQuick = async (groupId) => {
+  try {
+    console.log("🚪 Quitter groupe depuis bouton:", groupId)
+
+    const { getUserGroups, leaveGroup } = await import("./utils/groups.js")
+    const currentUser = getCurrentUser()
+    const userGroups = await getUserGroups(currentUser.id)
+    const group = userGroups.find((g) => g.id === groupId)
+
+    if (group) {
+      if (confirm(`Êtes-vous sûr de vouloir quitter le groupe "${group.name}" ?`)) {
+        const success = await leaveGroup(group.id, currentUser.id)
+        if (success) {
+          showToast(`Vous avez quitté le groupe "${group.name}"`, "success")
+          showSimpleGroups() // Recharger la liste
+        }
+      }
+    } else {
+      showToast("Groupe non trouvé", "error")
+    }
+  } catch (error) {
+    console.error("Erreur quitter groupe:", error)
+    showToast("Erreur lors de la sortie du groupe", "error")
+  }
+}
+
+// Modal de gestion des membres
+function showMembersManagementModal(group) {
+  const modal = document.createElement("div")
+  modal.className = "fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4"
+
+  modal.innerHTML = `
+    <div class="bg-[#222e35] rounded-lg p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
+      <div class="flex items-center justify-between mb-6">
+        <h2 class="text-xl font-semibold text-white">Gérer les membres</h2>
+        <button id="closeModal" class="text-gray-400 hover:text-white">
+          <i class="fas fa-times text-xl"></i>
+        </button>
+      </div>
+      
+      <div class="mb-4">
+        <h3 class="text-lg font-medium text-white mb-2">${group.name}</h3>
+        <p class="text-gray-400 text-sm">${group.members ? group.members.length : 0} membres</p>
+      </div>
+      
+      <div id="membersList" class="space-y-3 max-h-96 overflow-y-auto">
+        <!-- Les membres seront chargés ici -->
+      </div>
+      
+      <div class="mt-6 flex justify-end">
+        <button id="closeBtn" class="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors">
+          Fermer
+        </button>
+      </div>
+    </div>
+  `
+
+  document.body.appendChild(modal)
+
+  // Charger les membres
+  loadMembersForManagement(group)
+
+  // Event listeners
+  const closeModal = modal.querySelector("#closeModal")
+  const closeBtn = modal.querySelector("#closeBtn")
+
+  const closeModalFn = () => document.body.removeChild(modal)
+
+  closeModal.addEventListener("click", closeModalFn)
+  closeBtn.addEventListener("click", closeModalFn)
+}
+
+async function loadMembersForManagement(group) {
+  try {
+    const currentUser = getCurrentUser()
+    const { getGroupMembers } = await import("./utils/groups.js")
+    const members = await getGroupMembers(group.id)
+
+    const membersList = document.getElementById("membersList")
+    if (!membersList) return
+
+    membersList.innerHTML = members
+      .map((member) => {
+        const isAdmin = group.admins && group.admins.includes(member.id)
+        const isCreator = member.id === group.createdBy
+        const isCurrentUser = member.id === currentUser.id
+
+        return `
+        <div class="bg-[#2a3942] rounded-lg p-3">
+          <div class="flex items-center space-x-3 mb-2">
+            <img src="${member.avatar}" alt="${member.name}" class="w-10 h-10 rounded-full object-cover">
+            <div class="flex-1">
+              <div class="flex items-center space-x-2">
+                <div class="text-white font-medium">${isCurrentUser ? "Vous" : member.name}</div>
+                ${isCreator ? '<span class="text-xs bg-yellow-600 text-white px-2 py-1 rounded">Créateur</span>' : ""}
+                ${isAdmin && !isCreator ? '<span class="text-xs bg-green-600 text-white px-2 py-1 rounded">Admin</span>' : ""}
+              </div>
+              <div class="text-gray-400 text-sm">${member.phone}</div>
+            </div>
+          </div>
+          
+          ${
+            !isCurrentUser && !isCreator
+              ? `
+            <div class="flex gap-2">
+              ${
+                !isAdmin
+                  ? `<button onclick="promoteToAdminQuick('${group.id}', '${member.id}')" 
+                            class="flex-1 px-3 py-1 bg-green-600 hover:bg-green-700 text-white rounded text-sm transition-colors">
+                       Promouvoir Admin
+                    </button>`
+                  : ""
+              }
+              
+              <button onclick="removeMemberQuick('${group.id}', '${member.id}')" 
+                      class="flex-1 px-3 py-1 bg-red-600 hover:bg-red-700 text-white rounded text-sm transition-colors">
+                 Supprimer
+              </button>
+            </div>
+          `
+              : ""
+          }
+        </div>
+      `
+      })
+      .join("")
+  } catch (error) {
+    console.error("Erreur chargement membres:", error)
+    const membersList = document.getElementById("membersList")
+    if (membersList) {
+      membersList.innerHTML = '<div class="text-red-400 text-sm p-3">Erreur de chargement</div>'
+    }
+  }
+}
+
+// Fonctions globales pour la gestion des membres
+window.promoteToAdminQuick = async (groupId, userId) => {
+  try {
+    const { promoteToAdmin } = await import("./utils/groups.js")
+    const currentUser = getCurrentUser()
+    const success = await promoteToAdmin(groupId, userId, currentUser.id)
+
+    if (success) {
+      // Recharger la modal
+      const { getUserGroups } = await import("./utils/groups.js")
+      const userGroups = await getUserGroups(currentUser.id)
+      const group = userGroups.find((g) => g.id === groupId)
+      if (group) {
+        loadMembersForManagement(group)
+      }
+    }
+  } catch (error) {
+    console.error("Erreur promotion admin:", error)
+    showToast("Erreur lors de la promotion", "error")
+  }
+}
+
+window.removeMemberQuick = async (groupId, userId) => {
+  try {
+    const { removeMemberFromGroup } = await import("./utils/groups.js")
+    const currentUser = getCurrentUser()
+
+    if (confirm("Êtes-vous sûr de vouloir supprimer ce membre ?")) {
+      const success = await removeMemberFromGroup(groupId, userId, currentUser.id)
+
+      if (success) {
+        // Recharger la modal
+        const { getUserGroups } = await import("./utils/groups.js")
+        const userGroups = await getUserGroups(currentUser.id)
+        const group = userGroups.find((g) => g.id === groupId)
+        if (group) {
+          loadMembersForManagement(group)
+        }
+      }
+    }
+  } catch (error) {
+    console.error("Erreur suppression membre:", error)
+    showToast("Erreur lors de la suppression", "error")
+  }
+}
+
+async function openGroupChatDirect(group) {
+  try {
+    console.log("💬 === OUVERTURE CHAT GROUPE DIRECT ===")
+    console.log("Groupe:", group.name, "ID:", group.id)
+
+    // IMPORTANT: Réinitialiser les variables de chat personnel
     currentChat = null
     window.currentChat = null
 
-    // Définir le groupe actuel
     currentGroup = group
     window.currentGroup = group
 
-    // Responsive
     if (isMobile()) {
       document.getElementById("sidebar").style.display = "none"
       document.getElementById("chatArea").style.display = "flex"
@@ -1352,7 +1641,7 @@ async function openGroupChat(group) {
       document.getElementById("chatArea").style.display = "flex"
     }
 
-    showGroupHeader(group)
+    showChatHeader()
     await renderGroupMessages(group)
     showMessageInput()
 
@@ -1363,158 +1652,14 @@ async function openGroupChat(group) {
   }
 }
 
-function showGroupHeader(group) {
-  const chatHeader = document.getElementById("chatHeader")
-  const chatAvatar = document.getElementById("chatAvatar")
-  const chatName = document.getElementById("chatName")
-  const chatStatus = document.getElementById("chatStatus")
-
-  if (chatHeader && group) {
-    chatHeader.style.display = "flex"
-    chatAvatar.innerHTML = `
-      <div class="relative">
-        <img src="${group.avatar || "https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=150&h=150&fit=crop"}" 
-             alt="${group.name}" class="w-10 h-10 rounded-full object-cover">
-        <div class="absolute -bottom-1 -right-1 w-3 h-3 bg-gray-600 rounded-full flex items-center justify-center">
-          <i class="fas fa-users text-xs text-white"></i>
-        </div>
-      </div>
-    `
-    chatName.textContent = group.name
-
-    // NOUVEAU: Afficher "Vous" et les noms des autres membres
-    displayGroupMembersInHeader(group, chatStatus)
-
-    // NOUVEAU: Ajouter le menu des trois points avec toutes les options
-    const callButtons = document.getElementById("callButtons")
-    if (callButtons) {
-      const currentUser = getCurrentUser()
-      const isAdmin = group.admins && group.admins.includes(currentUser.id)
-
-      callButtons.innerHTML = `
-        <div class="relative">
-          <button id="groupMenuBtn" class="p-2 text-gray-400 hover:text-white transition-colors" title="Options du groupe">
-            <i class="fas fa-ellipsis-v text-lg"></i>
-          </button>
-          
-          <!-- Menu déroulant -->
-          <div id="groupMenu" class="absolute right-0 top-full mt-2 w-64 bg-[#222e35] rounded-lg shadow-xl border border-gray-600 z-50 hidden">
-            <div class="py-2">
-              <button id="groupInfoBtn" class="w-full px-4 py-3 text-left text-white hover:bg-[#2a3942] flex items-center space-x-3">
-                <i class="fas fa-info-circle text-blue-400"></i>
-                <span>Infos du groupe</span>
-              </button>
-              
-              ${
-                isAdmin
-                  ? `
-                <button id="addMemberBtn" class="w-full px-4 py-3 text-left text-white hover:bg-[#2a3942] flex items-center space-x-3">
-                  <i class="fas fa-user-plus text-green-400"></i>
-                  <span>Ajouter un membre</span>
-                </button>
-                
-                <button id="manageMembersBtn" class="w-full px-4 py-3 text-left text-white hover:bg-[#2a3942] flex items-center space-x-3">
-                  <i class="fas fa-users-cog text-yellow-400"></i>
-                  <span>Gérer les membres</span>
-                </button>
-                
-                <div class="border-t border-gray-600 my-2"></div>
-                
-                <button id="groupSettingsBtn" class="w-full px-4 py-3 text-left text-white hover:bg-[#2a3942] flex items-center space-x-3">
-                  <i class="fas fa-cog text-gray-400"></i>
-                  <span>Paramètres du groupe</span>
-                </button>
-              `
-                  : ""
-              }
-              
-              <div class="border-t border-gray-600 my-2"></div>
-              
-              <button id="leaveGroupBtn" class="w-full px-4 py-3 text-left text-red-400 hover:bg-[#2a3942] flex items-center space-x-3">
-                <i class="fas fa-sign-out-alt"></i>
-                <span>Quitter le groupe</span>
-              </button>
-            </div>
-          </div>
-        </div>
-      `
-
-      // Gestion du menu déroulant
-      const groupMenuBtn = document.getElementById("groupMenuBtn")
-      const groupMenu = document.getElementById("groupMenu")
-
-      if (groupMenuBtn && groupMenu) {
-        groupMenuBtn.addEventListener("click", (e) => {
-          e.stopPropagation()
-          groupMenu.classList.toggle("hidden")
-        })
-
-        // Fermer le menu en cliquant ailleurs
-        document.addEventListener("click", () => {
-          groupMenu.classList.add("hidden")
-        })
-
-        groupMenu.addEventListener("click", (e) => {
-          e.stopPropagation()
-        })
-      }
-
-      // Événements pour les boutons du menu
-      const groupInfoBtn = document.getElementById("groupInfoBtn")
-      const addMemberBtn = document.getElementById("addMemberBtn")
-      const manageMembersBtn = document.getElementById("manageMembersBtn")
-      const groupSettingsBtn = document.getElementById("groupSettingsBtn")
-      const leaveGroupBtn = document.getElementById("leaveGroupBtn")
-
-      if (groupInfoBtn) {
-        groupInfoBtn.addEventListener("click", async () => {
-          groupMenu.classList.add("hidden")
-          const { showGroupInfo } = await import("./utils/groups.js")
-          showGroupInfo(group)
-        })
-      }
-
-      if (addMemberBtn) {
-        addMemberBtn.addEventListener("click", async () => {
-          groupMenu.classList.add("hidden")
-          const { showAddMemberModal } = await import("./utils/groups.js")
-          showAddMemberModal(group)
-        })
-      }
-
-      if (manageMembersBtn) {
-        manageMembersBtn.addEventListener("click", async () => {
-          groupMenu.classList.add("hidden")
-          const { showGroupInfo } = await import("./utils/groups.js")
-          showGroupInfo(group) // Utilise la même modal avec les options de gestion
-        })
-      }
-
-      if (groupSettingsBtn) {
-        groupSettingsBtn.addEventListener("click", () => {
-          groupMenu.classList.add("hidden")
-          showToast("Paramètres du groupe - En développement", "info")
-        })
-      }
-
-      if (leaveGroupBtn) {
-        leaveGroupBtn.addEventListener("click", () => {
-          groupMenu.classList.add("hidden")
-          if (confirm(`Êtes-vous sûr de vouloir quitter le groupe "${group.name}" ?`)) {
-            showToast("Fonctionnalité en développement", "info")
-          }
-        })
-      }
-    }
-  }
+async function openGroupChat(group) {
+  return openGroupChatDirect(group)
 }
 
-// AJOUTER cette fonction dans script.js
 async function displayGroupMembersInHeader(group, statusElement) {
   try {
     const currentUser = getCurrentUser()
 
-    // Récupérer les membres du groupe
     const { getGroupMembers } = await import("./utils/groups.js")
     const members = await getGroupMembers(group.id)
 
@@ -1523,7 +1668,6 @@ async function displayGroupMembersInHeader(group, statusElement) {
       return
     }
 
-    // Séparer l'utilisateur actuel des autres
     const currentUserInGroup = members.find((m) => m.id === currentUser.id)
     const otherMembers = members.filter((m) => m.id !== currentUser.id)
 
@@ -1541,7 +1685,6 @@ async function displayGroupMembersInHeader(group, statusElement) {
         }
       }
     } else {
-      // Si l'utilisateur actuel n'est pas dans le groupe (cas rare)
       if (members.length === 1) {
         statusText = members[0].name
       } else if (members.length === 2) {
@@ -1566,7 +1709,6 @@ async function renderGroupMessages(group) {
   try {
     console.log("📱 Rendu des messages du groupe:", group.name)
 
-    // Récupérer les messages du groupe
     const { getGroupMessages } = await import("./utils/groups.js")
     const messages = await getGroupMessages(group.id)
 
@@ -1613,7 +1755,6 @@ function createGroupMessageElement(message, group) {
   messageDiv.className = `flex mb-4 ${isSentByMe ? "justify-end" : "justify-start"}`
   messageDiv.dataset.messageId = message.id
 
-  // Pour les messages de groupe, afficher le nom de l'expéditeur
   let senderName = ""
   if (!isSentByMe && message.senderName) {
     senderName = `<div class="text-xs text-gray-400 mb-1">${message.senderName}</div>`
@@ -1645,7 +1786,7 @@ function createGroupMessageElement(message, group) {
 
 async function sendGroupMessage(senderId, groupId, message) {
   try {
-    console.log("📤 === ENVOI MESSAGE GROUPE ===")
+    console.log(" === ENVOI MESSAGE GROUPE ===")
     console.log("Expéditeur:", senderId)
     console.log("Groupe:", groupId)
     console.log("Message:", message.text)
@@ -1661,7 +1802,6 @@ async function sendGroupMessage(senderId, groupId, message) {
   }
 }
 
-// Fonction utilitaire pour formater l'heure
 function formatTime(timestamp) {
   if (!timestamp) return ""
 
@@ -1686,7 +1826,22 @@ function formatTime(timestamp) {
   })
 }
 
-// Initialiser les groupes au chargement
-document.addEventListener("DOMContentLoaded", () => {
-  initializeSimpleGroups()
-})
+// Fonction globale pour ouvrir les infos du groupe
+window.openGroupInfos = async () => {
+  console.log("🔘 Ouverture infos groupe")
+  try {
+    if (!currentGroup) {
+      showToast("Aucun groupe sélectionné", "error")
+      return
+    }
+
+    const { showGroupInfo } = await import("./utils/groups.js")
+    showGroupInfo(currentGroup)
+  } catch (error) {
+    console.error("❌ Erreur ouverture infos:", error)
+    showToast("Erreur lors de l'ouverture des infos", "error")
+  }
+}
+
+// Exposer la fonction showSimpleGroups globalement
+window.showSimpleGroups = showSimpleGroups

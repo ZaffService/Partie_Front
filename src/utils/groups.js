@@ -777,46 +777,146 @@ export function createGroupModal(onGroupCreated) {
   }
 }
 
-// NOUVELLE FONCTION AMÉLIORÉE: Afficher les infos du groupe avec gestion des membres
+// NOUVELLE INTERFACE COMPLÈTE "INFOS DU GROUPE" basée sur la capture d'écran
 export function showGroupInfo(group) {
-  console.log("📋 Affichage infos groupe:", group.name)
+  console.log("📋 Affichage infos complètes du groupe:", group.name)
 
   const modal = document.createElement("div")
   modal.className = "fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4"
 
   modal.innerHTML = `
-    <div class="bg-[#222e35] rounded-lg p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
-      <div class="flex items-center justify-between mb-6">
-        <h2 class="text-xl font-semibold text-white">Infos du groupe</h2>
-        <button id="closeModal" class="text-gray-400 hover:text-white">
+    <div class="bg-[#111b21] rounded-lg w-full max-w-md max-h-[95vh] overflow-y-auto">
+      <!-- Header -->
+      <div class="flex items-center justify-between p-4 border-b border-gray-700">
+        <button id="closeModal" class="text-gray-400 hover:text-white p-2">
           <i class="fas fa-times text-xl"></i>
         </button>
+        <h2 class="text-lg font-medium text-white">Infos du groupe</h2>
+        <div class="w-10"></div> <!-- Spacer -->
       </div>
       
-      <div class="text-center mb-6">
-        <img src="${group.avatar || "https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=150&h=150&fit=crop"}" 
-             alt="${group.name}" class="w-24 h-24 rounded-full mx-auto mb-4 object-cover">
-        <h3 class="text-xl font-semibold text-white">${group.name}</h3>
-        <p class="text-gray-400">${group.members ? group.members.length : 0} membres</p>
-        ${group.description ? `<p class="text-gray-300 mt-2 text-sm">${group.description}</p>` : ""}
-      </div>
-      
-      <div class="space-y-4">
-        <div class="flex items-center justify-between">
-          <h4 class="text-white font-medium">Membres</h4>
-          <button id="addMemberBtn" class="text-green-400 hover:text-green-300 text-sm">
-            <i class="fas fa-plus mr-1"></i>Ajouter
+      <!-- Content -->
+      <div class="p-4 space-y-6">
+        
+        <!-- Section Sécurité -->
+        <div class="space-y-4">
+          <div class="flex items-start space-x-3 p-3 hover:bg-[#202c33] rounded-lg cursor-pointer">
+            <div class="w-8 h-8 flex items-center justify-center">
+              <i class="fas fa-lock text-gray-400"></i>
+            </div>
+            <div class="flex-1">
+              <div class="text-white font-medium">Chiffrement</div>
+              <div class="text-gray-400 text-sm">Les messages sont chiffrés de bout en bout. Cliquez pour plus d'informations.</div>
+            </div>
+          </div>
+          
+          <div class="flex items-center justify-between p-3 hover:bg-[#202c33] rounded-lg cursor-pointer">
+            <div class="flex items-center space-x-3">
+              <div class="w-8 h-8 flex items-center justify-center">
+                <i class="fas fa-clock text-gray-400"></i>
+              </div>
+              <div>
+                <div class="text-white font-medium">Messages éphémères</div>
+                <div class="text-gray-400 text-sm">Non</div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="flex items-center justify-between p-3 hover:bg-[#202c33] rounded-lg cursor-pointer">
+            <div class="flex items-center space-x-3">
+              <div class="w-8 h-8 flex items-center justify-center">
+                <i class="fas fa-shield-alt text-gray-400"></i>
+              </div>
+              <div>
+                <div class="text-white font-medium">Confidentialité avancée de la discussion</div>
+                <div class="text-gray-400 text-sm">Désactivée</div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="flex items-center justify-between p-3 hover:bg-[#202c33] rounded-lg cursor-pointer">
+            <div class="flex items-center space-x-3">
+              <div class="w-8 h-8 flex items-center justify-center">
+                <i class="fas fa-cog text-gray-400"></i>
+              </div>
+              <div class="text-white font-medium">Autorisations du groupe</div>
+            </div>
+            <i class="fas fa-chevron-right text-gray-400"></i>
+          </div>
+        </div>
+        
+        <!-- Section Communauté -->
+        <div class="border-t border-gray-700 pt-4">
+          <div class="flex items-center justify-between p-3 hover:bg-[#202c33] rounded-lg cursor-pointer">
+            <div class="flex items-center space-x-3">
+              <div class="w-10 h-10 bg-green-600 rounded-lg flex items-center justify-center">
+                <i class="fas fa-users text-white"></i>
+              </div>
+              <div>
+                <div class="text-white font-medium">Ajouter à une nouvelle communauté</div>
+                <div class="text-gray-400 text-sm">Rassemblez des membres dans des groupes spécifiques</div>
+              </div>
+            </div>
+            <i class="fas fa-chevron-right text-gray-400"></i>
+          </div>
+        </div>
+        
+        <!-- Section Membres -->
+        <div class="border-t border-gray-700 pt-4">
+          <div class="flex items-center justify-between mb-4">
+            <div class="text-white font-medium" id="membersCount">Chargement...</div>
+            <button class="text-gray-400 hover:text-white">
+              <i class="fas fa-search"></i>
+            </button>
+          </div>
+          
+          <!-- Boutons d'action -->
+          <div class="space-y-2 mb-4">
+            <button id="addMemberBtn" class="w-full flex items-center space-x-3 p-3 hover:bg-[#202c33] rounded-lg">
+              <div class="w-10 h-10 bg-green-600 rounded-full flex items-center justify-center">
+                <i class="fas fa-plus text-white"></i>
+              </div>
+              <div class="text-white font-medium">Ajouter un membre</div>
+            </button>
+            
+            <button id="inviteLinkBtn" class="w-full flex items-center space-x-3 p-3 hover:bg-[#202c33] rounded-lg">
+              <div class="w-10 h-10 bg-green-600 rounded-full flex items-center justify-center">
+                <i class="fas fa-link text-white"></i>
+              </div>
+              <div class="text-white font-medium">Inviter à rejoindre le groupe via un lien</div>
+            </button>
+          </div>
+          
+          <!-- Liste des membres -->
+          <div id="membersList" class="space-y-2">
+            <!-- Les membres seront chargés ici -->
+          </div>
+        </div>
+        
+        <!-- Section Actions -->
+        <div class="border-t border-gray-700 pt-4 space-y-2">
+          <button id="addToFavoritesBtn" class="w-full flex items-center space-x-3 p-3 hover:bg-[#202c33] rounded-lg">
+            <div class="w-8 h-8 flex items-center justify-center">
+              <i class="fas fa-heart text-gray-400"></i>
+            </div>
+            <div class="text-white font-medium">Ajouter aux Favoris</div>
+          </button>
+          
+          <button id="leaveGroupBtn" class="w-full flex items-center space-x-3 p-3 hover:bg-[#202c33] rounded-lg">
+            <div class="w-8 h-8 flex items-center justify-center">
+              <i class="fas fa-sign-out-alt text-red-400"></i>
+            </div>
+            <div class="text-red-400 font-medium">Quitter le groupe</div>
+          </button>
+          
+          <button id="reportGroupBtn" class="w-full flex items-center space-x-3 p-3 hover:bg-[#202c33] rounded-lg">
+            <div class="w-8 h-8 flex items-center justify-center">
+              <i class="fas fa-flag text-red-400"></i>
+            </div>
+            <div class="text-red-400 font-medium">Signaler le groupe</div>
           </button>
         </div>
-        <div id="membersList" class="space-y-2 max-h-48 overflow-y-auto">
-          <!-- Les membres seront chargés ici -->
-        </div>
-      </div>
-      
-      <div class="mt-6 flex justify-end">
-        <button id="closeBtn" class="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg">
-          Fermer
-        </button>
+        
       </div>
     </div>
   `
@@ -824,112 +924,117 @@ export function showGroupInfo(group) {
   document.body.appendChild(modal)
 
   // Charger les membres
-  loadGroupMembersWithActions(group, modal.querySelector("#membersList"))
+  loadGroupMembersComplete(group)
 
   // Event listeners
   const closeModal = modal.querySelector("#closeModal")
-  const closeBtn = modal.querySelector("#closeBtn")
   const addMemberBtn = modal.querySelector("#addMemberBtn")
+  const inviteLinkBtn = modal.querySelector("#inviteLinkBtn")
+  const addToFavoritesBtn = modal.querySelector("#addToFavoritesBtn")
+  const leaveGroupBtn = modal.querySelector("#leaveGroupBtn")
+  const reportGroupBtn = modal.querySelector("#reportGroupBtn")
 
   const closeModalFn = () => document.body.removeChild(modal)
 
   closeModal.addEventListener("click", closeModalFn)
-  closeBtn.addEventListener("click", closeModalFn)
 
-  // Bouton ajouter membre (seulement pour les admins)
+  // Vérifier les permissions
+  const currentUser = getCurrentUser()
+  const isAdmin = group.admins && group.admins.includes(currentUser.id)
+
   if (addMemberBtn) {
-    const currentUser = getCurrentUser()
-    const isAdmin = group.admins && group.admins.includes(currentUser.id)
-
     if (isAdmin) {
       addMemberBtn.addEventListener("click", () => {
         closeModalFn()
         showAddMemberModal(group)
       })
     } else {
-      addMemberBtn.style.display = "none"
+      addMemberBtn.style.opacity = "0.5"
+      addMemberBtn.style.cursor = "not-allowed"
+      addMemberBtn.addEventListener("click", () => {
+        showToast("Seuls les administrateurs peuvent ajouter des membres", "error")
+      })
     }
+  }
+
+  if (inviteLinkBtn) {
+    inviteLinkBtn.addEventListener("click", () => {
+      showToast("Lien d'invitation généré (fonctionnalité simulée)", "info")
+    })
+  }
+
+  if (addToFavoritesBtn) {
+    addToFavoritesBtn.addEventListener("click", () => {
+      showToast("Groupe ajouté aux favoris", "success")
+    })
+  }
+
+  if (leaveGroupBtn) {
+    leaveGroupBtn.addEventListener("click", async () => {
+      if (confirm(`Êtes-vous sûr de vouloir quitter le groupe "${group.name}" ?`)) {
+        const success = await leaveGroup(group.id, currentUser.id)
+        if (success) {
+          closeModalFn()
+          showToast("Vous avez quitté le groupe", "success")
+          if (window.showSimpleGroups) {
+            window.showSimpleGroups()
+          }
+        }
+      }
+    })
+  }
+
+  if (reportGroupBtn) {
+    reportGroupBtn.addEventListener("click", () => {
+      if (confirm("Signaler ce groupe ?")) {
+        showToast("Groupe signalé", "success")
+      }
+    })
   }
 }
 
-// NOUVELLE FONCTION: Charger les membres avec actions
-async function loadGroupMembersWithActions(group, container) {
+// Fonction pour charger les membres avec interface complète
+async function loadGroupMembersComplete(group) {
   try {
     const currentUser = getCurrentUser()
-    const isCurrentUserAdmin = group.admins && group.admins.includes(currentUser.id)
     const members = await getGroupMembers(group.id)
 
-    container.innerHTML = members
+    // Mettre à jour le compteur
+    const membersCount = document.getElementById("membersCount")
+    if (membersCount) {
+      membersCount.textContent = `${members.length} membre${members.length > 1 ? "s" : ""}`
+    }
+
+    const membersList = document.getElementById("membersList")
+    if (!membersList) return
+
+    membersList.innerHTML = members
       .map((member) => {
         const isAdmin = group.admins && group.admins.includes(member.id)
         const isCreator = member.id === group.createdBy
         const isCurrentUser = member.id === currentUser.id
 
         return `
-        <div class="flex items-center space-x-3 p-3 bg-[#2a3942] rounded-lg">
-          <img src="${member.avatar}" alt="${member.name}" class="w-10 h-10 rounded-full">
+        <div class="flex items-center space-x-3 p-3 hover:bg-[#202c33] rounded-lg">
+          <img src="${member.avatar}" alt="${member.name}" class="w-10 h-10 rounded-full object-cover">
           <div class="flex-1">
             <div class="flex items-center space-x-2">
-              <div class="text-white text-sm font-medium">${member.name}</div>
+              <div class="text-white font-medium">${isCurrentUser ? "Vous" : member.name}</div>
               ${isCreator ? '<span class="text-xs bg-yellow-600 text-white px-2 py-1 rounded">Créateur</span>' : ""}
-              ${isAdmin && !isCreator ? '<span class="text-xs bg-green-600 text-white px-2 py-1 rounded">Admin</span>' : ""}
-              ${isCurrentUser ? '<span class="text-xs bg-blue-600 text-white px-2 py-1 rounded">Vous</span>' : ""}
+              ${isAdmin && !isCreator ? '<span class="text-xs bg-green-600 text-white px-2 py-1 rounded">Admin du groupe</span>' : ""}
             </div>
-            <div class="text-gray-400 text-xs">${member.phone}</div>
+            <div class="text-gray-400 text-sm">${member.bio || "Fullstack JS Developer — passionate about everything JavaScript"}</div>
           </div>
-          
-          ${
-            isCurrentUserAdmin && !isCurrentUser && !isCreator
-              ? `
-            <div class="flex space-x-1">
-              ${
-                !isAdmin
-                  ? `<button class="promote-btn text-yellow-400 hover:text-yellow-300 p-1" data-user-id="${member.id}" title="Promouvoir admin">
-                      <i class="fas fa-crown text-sm"></i>
-                    </button>`
-                  : ""
-              }
-              <button class="remove-btn text-red-400 hover:text-red-300 p-1" data-user-id="${member.id}" title="Supprimer">
-                <i class="fas fa-trash text-sm"></i>
-              </button>
-            </div>
-          `
-              : ""
-          }
         </div>
       `
       })
       .join("")
-
-    // Ajouter les événements pour les boutons d'action
-    container.querySelectorAll(".promote-btn").forEach((btn) => {
-      btn.addEventListener("click", async () => {
-        const userId = btn.dataset.userId
-        const success = await promoteToAdmin(group.id, userId, currentUser.id)
-        if (success) {
-          // Recharger les membres
-          loadGroupMembersWithActions(group, container)
-        }
-      })
-    })
-
-    container.querySelectorAll(".remove-btn").forEach((btn) => {
-      btn.addEventListener("click", async () => {
-        const userId = btn.dataset.userId
-        const member = members.find((m) => m.id === userId)
-
-        if (confirm(`Êtes-vous sûr de vouloir supprimer ${member.name} du groupe ?`)) {
-          const success = await removeMemberFromGroup(group.id, userId, currentUser.id)
-          if (success) {
-            // Recharger les membres
-            loadGroupMembersWithActions(group, container)
-          }
-        }
-      })
-    })
   } catch (error) {
     console.error("Erreur chargement membres:", error)
-    container.innerHTML = '<div class="text-red-400 text-sm">Erreur de chargement</div>'
+    const membersList = document.getElementById("membersList")
+    if (membersList) {
+      membersList.innerHTML = '<div class="text-red-400 text-sm p-3">Erreur de chargement</div>'
+    }
   }
 }
 
@@ -1098,5 +1203,86 @@ function getCurrentUser() {
   } catch (error) {
     console.error("Erreur récupération currentUser:", error)
     return null
+  }
+}
+
+// Fonction pour quitter un groupe
+export async function leaveGroup(groupId, userId) {
+  try {
+    console.log("🚪 Utilisateur quitte le groupe:", { groupId, userId })
+
+    // Récupérer le groupe
+    const groupResponse = await fetch(`${API_URL}/groups/${groupId}`)
+    if (!groupResponse.ok) {
+      throw new Error("Groupe non trouvé")
+    }
+
+    const group = await groupResponse.json()
+
+    // Vérifier que l'utilisateur est membre
+    if (!group.members.includes(userId)) {
+      showToast("Vous n'êtes pas membre de ce groupe", "error")
+      return false
+    }
+
+    // Ne pas permettre au créateur de quitter (il doit transférer la propriété d'abord)
+    if (userId === group.createdBy) {
+      showToast("Le créateur ne peut pas quitter le groupe. Transférez d'abord la propriété.", "error")
+      return false
+    }
+
+    // Récupérer les infos de l'utilisateur
+    const userResponse = await fetch(`${API_URL}/users/${userId}`)
+    if (!userResponse.ok) {
+      throw new Error("Utilisateur non trouvé")
+    }
+
+    const user = await userResponse.json()
+
+    // Supprimer l'utilisateur du groupe
+    group.members = group.members.filter((id) => id !== userId)
+
+    // Supprimer des admins si nécessaire
+    if (group.admins.includes(userId)) {
+      group.admins = group.admins.filter((id) => id !== userId)
+    }
+
+    // Ajouter un message système
+    const systemMessage = {
+      id: Date.now(),
+      type: "system",
+      text: `${user.name} a quitté le groupe`,
+      senderId: "system",
+      timestamp: new Date().toISOString(),
+      time: new Date().toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" }),
+    }
+
+    group.messages = group.messages || []
+    group.messages.push(systemMessage)
+    group.lastMessage = systemMessage.text
+    group.lastMessageTime = systemMessage.timestamp
+
+    // Sauvegarder le groupe
+    await fetch(`${API_URL}/groups/${groupId}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(group),
+    })
+
+    // Supprimer le groupe de l'utilisateur
+    user.groups = user.groups ? user.groups.filter((id) => id !== groupId) : []
+
+    await fetch(`${API_URL}/users/${userId}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(user),
+    })
+
+    console.log("✅ Utilisateur a quitté le groupe")
+    return true
+  } catch (error) {
+    console.error("❌ Erreur quitter groupe:", error)
+    showToast("Erreur lors de la sortie du groupe", "error")
+    return false
   }
 }

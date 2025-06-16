@@ -1,9 +1,7 @@
 export function showToast(message, type = "info") {
-  // Supprime les toasts existants
   const existingToasts = document.querySelectorAll(".toast")
   existingToasts.forEach((toast) => toast.remove())
 
-  // Crée le nouveau toast
   const toast = document.createElement("div")
   const colors = {
     success: "#25D366",
@@ -25,12 +23,10 @@ export function showToast(message, type = "info") {
 
   document.body.appendChild(toast)
 
-  // Animation d'entrée
   setTimeout(() => {
     toast.style.transform = "translateX(0)"
   }, 100)
 
-  // Animation de sortie et suppression
   setTimeout(() => {
     toast.style.transform = "translateX(100%)"
     setTimeout(() => toast.remove(), 300)

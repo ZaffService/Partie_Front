@@ -147,7 +147,7 @@ function setupNewChatButton() {
     newChatBtn.addEventListener("click", () => {
       const currentUser = getCurrentUser()
       if (!currentUser) {
-        showToast("❌ Erreur: utilisateur non connecté", "error")
+        showToast(" Erreur: utilisateur non connecté", "error")
         return
       }
 
@@ -241,7 +241,7 @@ function setupNavigation() {
             await showStoriesView()
             break
           case "communities":
-            showToast("📱 Groupes - Fonctionnalité en développement", "info")
+            showToast(" Groupes - Fonctionnalité en développement", "info")
             break
           case "settings":
             showSettingsView()
@@ -955,7 +955,7 @@ function setupMessageInput() {
       const currentUser = getCurrentUser()
       if (!currentUser) return
 
-      console.log("📤 Envoi message:", text)
+      console.log(" Envoi message:", text)
 
       const message = {
         id: Date.now(),
@@ -1003,6 +1003,30 @@ function setupMessageInput() {
       e.preventDefault()
       sendTextMessage()
     }
+  })
+
+  // Indicateur de frappe temps réel
+  let typingTimeout = null
+  messageText.addEventListener("input", async () => {
+    // Importer la fonction de frappe
+    const { sendTypingIndicator } = await import("./utils/realtime.js")
+
+    // Envoyer signal de début de frappe
+    if (currentChat) {
+      sendTypingIndicator(currentChat.id, true)
+    }
+
+    // Annuler le timeout précédent
+    if (typingTimeout) {
+      clearTimeout(typingTimeout)
+    }
+
+    // Arrêter l'indicateur après 2 secondes d'inactivité
+    typingTimeout = setTimeout(async () => {
+      if (currentChat) {
+        sendTypingIndicator(currentChat.id, false)
+      }
+    }, 2000)
   })
 }
 
@@ -1135,6 +1159,17 @@ function handleNewMessage(message, chat) {
   }
 
   if (message.senderId !== currentUser.id) {
+    // Marquer le message comme lu automatiquement si la conversation est ouverte
+    if (currentChat && currentChat.id === chat.id) {
+      import("./utils/realtime.js").then(({ markMessageAsRead }) => {
+        markMessageAsRead(message.id, chat.id)
+      })
+    }
+
+    // Jouer un son de notification pour les messages vocaux
+    if (message.type === "voice") {
+      playNotificationSound()
+    }
     showToast(` Nouveau message de ${chat.name}`, "info")
   }
 }
@@ -1845,3 +1880,28 @@ window.openGroupInfos = async () => {
 
 // Exposer la fonction showSimpleGroups globalement
 window.showSimpleGroups = showSimpleGroups
+
+function playNotificationSound() {
+  try {
+    // Son spécial pour les messages vocaux
+    const audioContext = new (window.AudioContext || window.webkitAudioContext)()
+    const oscillator = audioContext.createOscillator()
+    const gainNode = audioContext.createGain()
+
+    oscillator.connect(gainNode)
+    gainNode.connect(audioContext.destination)
+
+    // Mélodie spéciale pour les vocaux
+    oscillator.frequency.setValueAtTime(800, audioContext.currentTime)
+    oscillator.frequency.setValueAtTime(1000, audioContext.currentTime + 0.1)
+    oscillator.frequency.setValueAtTime(600, audioContext.currentTime + 0.2)
+
+    gainNode.gain.setValueAtTime(0.1, audioContext.currentTime)
+    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3)
+
+    oscillator.start(audioContext.currentTime)
+    oscillator.stop(audioContext.currentTime + 0.3)
+  } catch (error) {
+    console.log("Son de notification non disponible:", error)
+  }
+}
